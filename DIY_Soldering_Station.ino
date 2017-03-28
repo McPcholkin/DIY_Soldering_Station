@@ -1,6 +1,6 @@
 /*
  * Arduino soldering station project
- * get amplified sidnal to serial
+ * McPcholkin https://github.com/McPcholkin/DIY_Soldering_Station
  */
 
 // iron control
@@ -28,48 +28,6 @@ int ironTempPwmReal = 0; //current PWM value
 
 int incrementIron = 000; //start value of iron sensor
 int incrementAir = 000; //start value of air sensor
-
-
-
-/*
-//----------  7 segment 
-
-//Пин подключен к ST_CP входу 74HC595
-int latchPin = 8;
-//Пин подключен к SH_CP входу 74HC595
-int clockPin = 9;
-//Пин подключен к DS входу 74HC595
-int dataPin = 10; 
-
-// Пины катодов дисплея
-int oneDigitPin = 5;
-int twoDigitPin = 6;
-int threeDigitPin = 7;
-
-// бинарные значения цыфр
-char numbers[10] = {
-  0b11111100, // 0
-  0b01100000, // 1
-  0b11011010, // 2
-  0b11110010, // 3
-  0b01100110, // 4
-  0b10110110, // 5
-  0b10111110, // 6
-  0b11100000, // 7 
-  0b11111110, // 8
-  0b11110110  // 9
-};
-
-// Задержка смены сегмента в МС
-int flicerDelay = 3;
-
-// delay to show value to display
-int cyclesToLed = 0; //
-
-//--------------------------
-
-*/
-
 
 
 // -------- LiquidCrystal 16x2 LCD display. --------
@@ -181,8 +139,8 @@ byte linesFull[8] = {
   0b11011
 };
 
-
 // ---------------------------------------------
+
 
 //---------- analog smoothing ---
 const int numReadings = 100;
@@ -207,16 +165,7 @@ void setup() {
                                     //(выводим 0 - старт с выключеным паяльником- 
                                     // пока не опредилим состояние температуры)
 
-//  pinMode(latchPin, OUTPUT);
- // pinMode(clockPin, OUTPUT);
- // pinMode(dataPin, OUTPUT);
-  //pinMode(oneDigitPin, OUTPUT);
- // pinMode(twoDigitPin, OUTPUT);
- // pinMode(threeDigitPin, OUTPUT);
-  //digitalWrite(latchPin, HIGH);
-
-
-  // --- LCD ---
+  // ---- LCD ----
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
 
@@ -230,7 +179,7 @@ void setup() {
   lcd.createChar(6, linesLeft);
   lcd.createChar(7, linesFull);
   
-  // Print a message to the LCD.
+  // Print a welcome message to the LCD.
   lcd.setCursor(0, 0);
   lcd.print("Soldering");
   lcd.setCursor(0, 1);
@@ -239,9 +188,11 @@ void setup() {
   lcd.write(byte(3));
   lcd.setCursor(15, 1);
   lcd.write(byte(4));
-  delay(1000);
+  delay(1500);
   // clear display from welcome message
   lcd.clear();
+  //---- LCD ----
+
 
   // initialize all the readings to 0:
   for (int thisReading = 0; thisReading < numReadings; thisReading++) {
@@ -256,13 +207,10 @@ void loop() {
   
 sensorVariable = analogRead(pinTempIron); //get iron sensor data
 //int potVariable = analogRead(A1);    //get pot data
-
 //pwmControl=map(potVariable,0,1023,0,255); // map pot 0-1023 as 0-255
-
 
 int buttonUpState=digitalRead(ironButtonUp);    //get buttons state
 int buttonDownState=digitalRead(ironButtonDown);
-
 
 // Debug output
 //Serial.print("PWM Pot: ");
@@ -282,24 +230,19 @@ Serial.print(ironTempSet);
 
 Serial.println("");
 //delay(100);
-
-
 // set pwm value
 //analogWrite(pinPwmIron, pwmControl);
 
 // ------------- debug end --------------------//
 
+// smooth iron meshure values
 smoothIron();
 
-show();   // Вывести значение переменной на экран(LED)
-//lcd.display();
-//delay(500);
-//lcd.setCursor(0, 0);
-//lcd.print(millis() / 100);
-
-//delay(2000);
+// refresh LCD screen
+show();   
 
 
+// ------------------------------  Iron temp control  -------------------------------------------------------
 if (ironTempReal < ironTempSet ){   // Если температура паяльника ниже установленной температуры то:
   if ((ironTempSet - ironTempReal) < 16 & (ironTempSet - ironTempReal) > 6 )       // Проверяем разницу между 
                                                // установленной температурой и текущей паяльника,
@@ -336,7 +279,7 @@ ironTempReal=map(ironTempReal,0,764,25,400);       // нужно вычисли�
                              // 0 sens is 25 on iron - 764 is 295 on iron
                              // 400 - get 228-232 on iron when ironTempSet = 230
 incrementIron=ironTempReal;
-
+//----------------------------------------------------------------------------------------------------
 
 
 //---------------- buttons ---------------//
@@ -350,15 +293,12 @@ if (digitalRead(ironButtonDown) == 1) // Если нажата вниз кноп
   {
    tempIronControl(0);
   }
-
-
-
-
+// End loop
 }
 
 
 
-//----------------- iron temp buttons control ----
+//----------------- iron temp buttons control -----------------------
 void tempIronControl(int value) // debouce control iron temp
 {
  static unsigned long last_interrupt_time = 0;
@@ -366,7 +306,6 @@ void tempIronControl(int value) // debouce control iron temp
  // If interrupts come faster than 200ms, assume it's a bounce and ignore
  if (interrupt_time - last_interrupt_time > 50)
  {
-  //cyclesToLed = 100; // show value for 100 cycles
   if (value == 0) // temp Down
     {
     if ( ironTempSet <= ironTempMin || (ironTempSet-5) <= ironTempMin )
@@ -378,8 +317,6 @@ void tempIronControl(int value) // debouce control iron temp
     else {
           ironTempSet=ironTempSet-5;
           incrementIron = ironTempSet;
-          //show(increment);   // Вывести значение переменной на экран(LED)
-          //delay(100);
          }
     }
  
@@ -393,16 +330,12 @@ void tempIronControl(int value) // debouce control iron temp
          ironTempSet=ironTempSet+5;
          }
     incrementIron = ironTempSet;
-    //cyclesTolLed = 100;
-    //show(increment);   // Вывести значение переменной на экран(LED)
-    //cyclesTolLed = 0;
-    //delay(100);
-    }
-    //cyclesToLed = 0;
  }
  last_interrupt_time = interrupt_time;
 }
+}
 //----------------------------------------------------------------
+
 
 
 //----------------  smooth iron -----------------
@@ -479,86 +412,6 @@ void show()
  lcd.print(ironTempSet);
  lcd.setCursor(15, 1);
  lcd.print("%");
-
-
- //lcd.noDisplay();
-// delay(1000);
 }
 
 
-/*
-//----------------- LED control -----------------
-
-void offAllLedSegments()
-{
-  digitalWrite(oneDigitPin, HIGH); // off all segments
-  digitalWrite(twoDigitPin, HIGH); // to prevent ghosting
-  digitalWrite(threeDigitPin, HIGH); 
-}
-
-void onLedSegment(int value)
-{
-  
-  if (value == 1) // on first segment
-  {
-    digitalWrite(oneDigitPin, LOW); 
-    digitalWrite(twoDigitPin, HIGH); 
-    digitalWrite(threeDigitPin, HIGH);
-  }
-  else if (value == 2) // on second segment
-  {
-    digitalWrite(oneDigitPin, HIGH); 
-    digitalWrite(twoDigitPin, LOW); 
-    digitalWrite(threeDigitPin, HIGH);
-  }
-  else if (value == 3) // on third segment
-  {
-   digitalWrite(oneDigitPin, HIGH); 
-   digitalWrite(twoDigitPin, HIGH); 
-   digitalWrite(threeDigitPin, LOW); 
-  }
-
-  delay(flicerDelay);
-  
-  
-}
-
-void show(int value)
-  {
-    int first=value/100;       //split parameter to 3 digit
-    int second=value%100/10;
-    int third=value%10;
-
-    
-     
-    for (int i=0; i<=cyclesToLed; i++)
-    {
-    offAllLedSegments();
-
-    digitalWrite(latchPin, LOW);  // put bits for first digit
-    shiftOut(dataPin, clockPin, LSBFIRST, numbers[first]);
-    digitalWrite(latchPin, HIGH);
-
-    onLedSegment(1);
-
-    offAllLedSegments();
-  
-    digitalWrite(latchPin, LOW);  // put bits for second digit
-    shiftOut(dataPin, clockPin, LSBFIRST, numbers[second]);
-    digitalWrite(latchPin, HIGH);
-
-    onLedSegment(2); 
-
-    offAllLedSegments();
-
-    digitalWrite(latchPin, LOW);  // put bits for third digit
-    shiftOut(dataPin, clockPin, LSBFIRST, numbers[third]);
-    digitalWrite(latchPin, HIGH);
-
-    onLedSegment(3);
-
-    offAllLedSegments();
-    } 
-  }
-  
-*/
