@@ -1,31 +1,30 @@
 /*
- * Arduino soldering iron test 
+ * Arduino soldering station project
  * get amplified sidnal to serial
  */
 
-// iron cintrol
+// iron control
 int pinPwmIron = 10; // pwm to mosfet
 int pinTempIron = A0; // input from termal sensor in iron
 int pwmControl = 0; //var to save pwm value
 
 // control buttons
-int buttonUp = 7;
-int buttonDown = 8;
+int ironButtonUp = 7;
+int ironButtonDown = 8;
 
 
-// temp control 
-int tempSet = 230; //default set temp
-int tempMin = 200; //minimum temp
-int tempMax = 350; //max temp
-int tempReal = 250; //val termal sensor var
-int tempPwmMin = 40; //minimal value PWM
-int tempPwmMax = 180; //maximum value PWM
-int tempPwmReal = 0; //current PWM value
+// iron temp control 
+int ironTempSet = 230; //default set temp
+int ironTempMin = 200; //minimum temp
+int ironTempMax = 350; //max temp
+int ironTempReal = 230; //val termal sensor var
+int ironTempPwmMin = 40; //minimal value PWM
+int ironTempPwmMax = 180; //maximum value PWM
+int ironTempPwmReal = 0; //current PWM value
 
-int tempError = -50; // difference temp (set to real)
+// int tempError = -50; // difference temp (set to real)  -- not used?
 
-int tempDiff = 0; //variable to diff temp (set to current)
-
+// int tempDiff = 0; //variable to diff temp (set to current) -- not used?
 
 int increment = 000; //start value of sensor
 
@@ -200,10 +199,10 @@ int sensorVariable = 0; // iron sensor data
 void setup() {
   Serial.begin(115200);
   pinMode(pinPwmIron, OUTPUT);
-  pinMode(buttonUp, INPUT);
-  pinMode(buttonDown, INPUT);
+  pinMode(ironButtonUp, INPUT);
+  pinMode(ironButtonDown, INPUT);
 
-  analogWrite(pinPwmIron, tempPwmReal); //Вывод  шим в нагрузку паяльника 
+  analogWrite(pinPwmIron, ironTempPwmReal); //Вывод  шим в нагрузку паяльника 
                                     //(выводим 0 - старт с выключеным паяльником- 
                                     // пока не опредилим состояние температуры)
 
@@ -260,8 +259,8 @@ sensorVariable = analogRead(pinTempIron); //get iron sensor data
 //pwmControl=map(potVariable,0,1023,0,255); // map pot 0-1023 as 0-255
 
 
-int buttonUpState=digitalRead(buttonUp);    //get buttons state
-int buttonDownState=digitalRead(buttonDown);
+int buttonUpState=digitalRead(ironButtonUp);    //get buttons state
+int buttonDownState=digitalRead(ironButtonDown);
 
 
 // Debug output
@@ -274,7 +273,7 @@ Serial.print("Sensor: ");
 Serial.print(sensorVariable);
 Serial.print(" | ");
 Serial.print("Set Value: ");
-Serial.print(tempSet);
+Serial.print(ironTempSet);
 //Serial.print(" | ");
 //Serial.print("Button Down: ");
 //Serial.print(buttonDownState);
@@ -300,53 +299,53 @@ show();   // Вывести значение переменной на экра�
 //delay(2000);
 
 
-if (tempReal < tempSet ){   // Если температура паяльника ниже установленной температуры то:
-  if ((tempSet - tempReal) < 16 & (tempSet - tempReal) > 6 )       // Проверяем разницу между 
+if (ironTempReal < ironTempSet ){   // Если температура паяльника ниже установленной температуры то:
+  if ((ironTempSet - ironTempReal) < 16 & (ironTempSet - ironTempReal) > 6 )       // Проверяем разницу между 
                                                // установленной температурой и текущей паяльника,
                                                // Если разница меньше 10 градусов то 
       {
-        tempPwmReal = 99; // Понижаем мощность нагрева (шим 0-255  мы делаем 99)  - 
+        ironTempPwmReal = 99; // Понижаем мощность нагрева (шим 0-255  мы делаем 99)  - 
                           // таким образом мы убираем инерцию перегрева
       }
 
-  else if ((tempSet - tempReal) < 4 )
+  else if ((ironTempSet - ironTempReal) < 4 )
     {
-      tempPwmReal = 45; 
+      ironTempPwmReal = 45; 
     }
 
   else 
     {
-      tempPwmReal = 230; // Иначе Подымаем мощность нагрева(шим 0-255  мы делаем 230) на максимум 
+      ironTempPwmReal = 230; // Иначе Подымаем мощность нагрева(шим 0-255  мы делаем 230) на максимум 
                          // для быстрого нагрева до нужной температуры
     }
 
-analogWrite(pinPwmIron, tempPwmReal); // Вывод в шим порт (на транзистор) значение мощности
+analogWrite(pinPwmIron, ironTempPwmReal); // Вывод в шим порт (на транзистор) значение мощности
 
 }
 
 else { // Иначе (если температура паяльника равняется или выше установленной) 
-       tempPwmReal = 0;  // Выключаем мощность нагрева (шим 0-255  мы делаем 0)  - 
+       ironTempPwmReal = 0;  // Выключаем мощность нагрева (шим 0-255  мы делаем 0)  - 
                          // таким образом мы отключаем паяльник
-       analogWrite(pinPwmIron, tempPwmReal); // Вывод в шим порт (на транзистор) значение 
+       analogWrite(pinPwmIron, ironTempPwmReal); // Вывод в шим порт (на транзистор) значение 
      }
 
-tempReal = analogRead(pinTempIron); // считываем текущую температуру
+ironTempReal = analogRead(pinTempIron); // считываем текущую температуру
 
-tempReal=map(tempReal,0,764,25,400);       // нужно вычислить
+ironTempReal=map(ironTempReal,0,764,25,400);       // нужно вычислить
                              // 0 sens is 25 on iron - 764 is 295 on iron
-                             // 325 - get 228-232 on iron when tempSet = 230
-increment=tempReal;
+                             // 400 - get 228-232 on iron when ironTempSet = 230
+increment=ironTempReal;
 
 
 
 //---------------- buttons ---------------//
 
-if (digitalRead(buttonUp) == 1) // Если нажата вниз кнопка то понизить температуру на 5
+if (digitalRead(ironButtonUp) == 1) // Если нажата вниз кнопка то понизить температуру на 5
   {
    tempIronControl(1);
   }
 
-if (digitalRead(buttonDown) == 1) // Если нажата вниз кнопка то понизить температуру на 5
+if (digitalRead(ironButtonDown) == 1) // Если нажата вниз кнопка то понизить температуру на 5
   {
    tempIronControl(0);
   }
@@ -369,15 +368,15 @@ void tempIronControl(int value) // debouce control iron temp
   //cyclesToLed = 100; // show value for 100 cycles
   if (value == 0) // temp Down
     {
-    if ( tempSet <= tempMin || (tempSet-5) <= tempMin )
+    if ( ironTempSet <= ironTempMin || (ironTempSet-5) <= ironTempMin )
     {
-      tempSet = tempMin;
-      increment = tempSet;
+      ironTempSet = ironTempMin;
+      increment = ironTempSet;
     }
 
     else {
-          tempSet=tempSet-5;
-          increment = tempSet;
+          ironTempSet=ironTempSet-5;
+          increment = ironTempSet;
           //show(increment);   // Вывести значение переменной на экран(LED)
           //delay(100);
          }
@@ -385,14 +384,14 @@ void tempIronControl(int value) // debouce control iron temp
  
   else if (value == 1) // temp Up
     {
-    if ( tempSet >= tempMax )
+    if ( ironTempSet >= ironTempMax )
       {
-        tempSet = tempMax;
+        ironTempSet = ironTempMax;
       }
     else {
-         tempSet=tempSet+5;
+         ironTempSet=ironTempSet+5;
          }
-    increment = tempSet;
+    increment = ironTempSet;
     //cyclesTolLed = 100;
     //show(increment);   // Вывести значение переменной на экран(LED)
     //cyclesTolLed = 0;
@@ -412,7 +411,7 @@ void smoothIron()
   // subtract the last reading:
   total = total - readings[readIndex];
   // read from the sensor:
-  readings[readIndex] = increment;
+  readings[readIndex] = increment; // bouncing value !
   // add the reading to the total:
   total = total + readings[readIndex];
   // advance to the next position in the array:
@@ -448,7 +447,7 @@ void show()
  lcd.setCursor(6, 0);
  lcd.print(">");
  lcd.setCursor(8, 0);
- lcd.print(tempSet);
+ lcd.print(ironTempSet);
  lcd.setCursor(11, 0);
  lcd.write(byte(0));
 
@@ -466,7 +465,7 @@ void show()
  lcd.setCursor(6, 1);
  lcd.print(">");
  lcd.setCursor(8, 1);
- lcd.print(tempSet);
+ lcd.print(ironTempSet);
  lcd.setCursor(11, 1);
  lcd.write(byte(0));
  
@@ -476,7 +475,7 @@ void show()
  //lcd.setCursor(12, 1);
  //lcd.print("S:");
  lcd.setCursor(13, 1);
- lcd.print(tempSet);
+ lcd.print(ironTempSet);
  lcd.setCursor(15, 1);
  lcd.print("%");
 
