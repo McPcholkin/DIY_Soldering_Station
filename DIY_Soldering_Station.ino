@@ -26,7 +26,8 @@ int ironTempPwmReal = 0; //current PWM value
 
 // int tempDiff = 0; //variable to diff temp (set to current) -- not used?
 
-int increment = 000; //start value of sensor
+int incrementIron = 000; //start value of iron sensor
+int incrementAir = 000; //start value of air sensor
 
 
 
@@ -267,7 +268,7 @@ int buttonDownState=digitalRead(ironButtonDown);
 //Serial.print("PWM Pot: ");
 //Serial.print(pwmControl);
 Serial.print("Increment: ");
-Serial.print(increment);
+Serial.print(incrementIron);
 Serial.print(" | ");
 Serial.print("Sensor: ");
 Serial.print(sensorVariable);
@@ -334,7 +335,7 @@ ironTempReal = analogRead(pinTempIron); // считываем текущую т�
 ironTempReal=map(ironTempReal,0,764,25,400);       // нужно вычислить
                              // 0 sens is 25 on iron - 764 is 295 on iron
                              // 400 - get 228-232 on iron when ironTempSet = 230
-increment=ironTempReal;
+incrementIron=ironTempReal;
 
 
 
@@ -371,12 +372,12 @@ void tempIronControl(int value) // debouce control iron temp
     if ( ironTempSet <= ironTempMin || (ironTempSet-5) <= ironTempMin )
     {
       ironTempSet = ironTempMin;
-      increment = ironTempSet;
+      incrementIron = ironTempSet;
     }
 
     else {
           ironTempSet=ironTempSet-5;
-          increment = ironTempSet;
+          incrementIron = ironTempSet;
           //show(increment);   // Вывести значение переменной на экран(LED)
           //delay(100);
          }
@@ -391,7 +392,7 @@ void tempIronControl(int value) // debouce control iron temp
     else {
          ironTempSet=ironTempSet+5;
          }
-    increment = ironTempSet;
+    incrementIron = ironTempSet;
     //cyclesTolLed = 100;
     //show(increment);   // Вывести значение переменной на экран(LED)
     //cyclesTolLed = 0;
@@ -411,7 +412,7 @@ void smoothIron()
   // subtract the last reading:
   total = total - readings[readIndex];
   // read from the sensor:
-  readings[readIndex] = increment; // bouncing value !
+  readings[readIndex] = incrementIron; // bouncing value !
   // add the reading to the total:
   total = total + readings[readIndex];
   // advance to the next position in the array:
