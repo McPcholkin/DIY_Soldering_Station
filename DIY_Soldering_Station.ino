@@ -4,13 +4,21 @@
  */
 
 // iron control
-int pinPwmIron = 10; // pwm to mosfet
+int pinPwmIron = 9; // pwm to mosfet
 int pinTempIron = A0; // input from termal sensor in iron
-int pwmControl = 0; //var to save pwm value
+//int pwmControlIron = 0; //var to save pwm value -- not used?
+
+// iron control
+int pinPwmAir = 6; // pwm to mosfet
+int pinPwmAirFan = 10;
+int pinTempAir = A1; // input from termal sensor in iron
+//int pwmControl = 0; //var to save pwm value -- not used?
 
 // control buttons
 int ironButtonUp = 7;
 int ironButtonDown = 8;
+//int airButtonUp = 5;
+//int airButtonDown = 6;
 
 
 // iron temp control 
@@ -190,7 +198,7 @@ void setup() {
   lcd.write(byte(3));
   lcd.setCursor(15, 1);
   lcd.write(byte(4));
-  delay(1500);
+  delay(2000);
   // clear display from welcome message
   lcd.clear();
   //---- LCD ----
@@ -407,7 +415,7 @@ void show()
  //lcd.setCursor(12, 1);
  //lcd.print("S:");
  lcd.setCursor(13, 1);
- lcd.print(ironTempSet);
+ lcd.print(50);
  lcd.setCursor(15, 1);
  lcd.print("%");
 }
