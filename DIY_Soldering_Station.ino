@@ -1,17 +1,16 @@
 /*
  * Arduino soldering iron test 
- * control temperature with variable resistor
  * get amplified sidnal to serial
  */
 
-int pot = A1; // pot for testing
-int pinPwmIron = 11; // pwm to mosfet
-int tempIron = A0; // input from termal sensor in iron
+// iron cintrol
+int pinPwmIron = 10; // pwm to mosfet
+int pinTempIron = A0; // input from termal sensor in iron
 int pwmControl = 0; //var to save pwm value
 
 // control buttons
-int buttonUp = 13;
-int buttonDown = 12;
+int buttonUp = 7;
+int buttonDown = 8;
 
 
 // temp control 
@@ -31,9 +30,8 @@ int tempDiff = 0; //variable to diff temp (set to current)
 int increment = 000; //start value of sensor
 
 
-//debug buttons
-int buttonValue = 5;
 
+/*
 //----------  7 segment 
 
 //Пин подключен к ST_CP входу 74HC595
@@ -70,6 +68,122 @@ int cyclesToLed = 0; //
 
 //--------------------------
 
+*/
+
+
+
+// -------- LiquidCrystal 16x2 LCD display. --------
+/* The circuit:
+ * LCD RS pin to digital pin 12
+ * LCD Enable pin to digital pin 11
+ * LCD D4 pin to digital pin 5
+ * LCD D5 pin to digital pin 4
+ * LCD D6 pin to digital pin 3
+ * LCD D7 pin to digital pin 2
+ * LCD R/W pin to ground
+ * 10K resistor:
+ * ends to +5V and ground
+ * wiper to LCD VO pin (pin 3)
+ */
+
+// include the library code:
+#include <LiquidCrystal.h>
+
+// initialize the library with the numbers of the interface pins
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+// make some custom characters 5x8 pix:
+
+byte degree[8] = {
+  0b11100,
+  0b10100,
+  0b11100,
+  0b00000,
+  0b00000,
+  0b00000,
+  0b00000,
+  0b00000
+};
+
+byte term[8] = {
+  0b00100,
+  0b01010,
+  0b01010,
+  0b01010,
+  0b01010,
+  0b10001,
+  0b10001,
+  0b01110
+};
+
+byte fan[8] = {
+  0b00000,
+  0b11001,
+  0b01011,
+  0b00100,
+  0b11010,
+  0b10011,
+  0b00000,
+  0b00000,
+};
+
+byte ironTop[8] = {
+  0b00001,
+  0b00010,
+  0b00100,
+  0b01110,
+  0b01110,
+  0b01110,
+  0b01110,
+  0b01110
+};
+byte ironBottom[8] = {
+  0b01110,
+  0b11111,
+  0b11111,
+  0b00100,
+  0b00100,
+  0b00100,
+  0b00100,
+  0b00100
+};
+
+byte heat[8] = {
+  0b11111,
+  0b10101,
+  0b10001,
+  0b10101,
+  0b11111,
+  0b00000,
+  0b00000,
+  0b00000
+};
+
+byte linesLeft[8] = {
+  0b00011,
+  0b11011,
+  0b11011,
+  0b11011,
+  0b11011,
+  0b11011,
+  0b11011,
+  0b11011
+};
+
+byte linesFull[8] = {
+  0b11011,
+  0b11011,
+  0b11011,
+  0b11011,
+  0b11011,
+  0b11011,
+  0b11011,
+  0b11011
+};
+
+
+// ---------------------------------------------
+
 //---------- analog smoothing ---
 const int numReadings = 100;
 
@@ -79,8 +193,9 @@ int total = 0;                  // the running total
 int average = 0;                // the average
 //------------------------------------------
 
-
-
+// debug
+int sensorVariable = 0; // iron sensor data
+//------------------
 
 void setup() {
   Serial.begin(115200);
@@ -92,13 +207,41 @@ void setup() {
                                     //(выводим 0 - старт с выключеным паяльником- 
                                     // пока не опредилим состояние температуры)
 
-  pinMode(latchPin, OUTPUT);
-  pinMode(clockPin, OUTPUT);
-  pinMode(dataPin, OUTPUT);
-  pinMode(oneDigitPin, OUTPUT);
-  pinMode(twoDigitPin, OUTPUT);
-  pinMode(threeDigitPin, OUTPUT);
-  digitalWrite(latchPin, HIGH);
+//  pinMode(latchPin, OUTPUT);
+ // pinMode(clockPin, OUTPUT);
+ // pinMode(dataPin, OUTPUT);
+  //pinMode(oneDigitPin, OUTPUT);
+ // pinMode(twoDigitPin, OUTPUT);
+ // pinMode(threeDigitPin, OUTPUT);
+  //digitalWrite(latchPin, HIGH);
+
+
+  // --- LCD ---
+  // set up the LCD's number of columns and rows:
+  lcd.begin(16, 2);
+
+  // create a new character
+  lcd.createChar(0, degree);
+  lcd.createChar(1, fan);
+  lcd.createChar(2, heat);
+  lcd.createChar(3, ironTop);
+  lcd.createChar(4, ironBottom);
+  lcd.createChar(5, term);
+  lcd.createChar(6, linesLeft);
+  lcd.createChar(7, linesFull);
+  
+  // Print a message to the LCD.
+  lcd.setCursor(0, 0);
+  lcd.print("Soldering");
+  lcd.setCursor(0, 1);
+  lcd.print("Station FW:0.1");
+  lcd.setCursor(15, 0);
+  lcd.write(byte(3));
+  lcd.setCursor(15, 1);
+  lcd.write(byte(4));
+  delay(1000);
+  // clear display from welcome message
+  lcd.clear();
 
   // initialize all the readings to 0:
   for (int thisReading = 0; thisReading < numReadings; thisReading++) {
@@ -109,11 +252,12 @@ void setup() {
 
 void loop() {
 
+// ------------- debug  --------------------//
   
-int sensorVariable = analogRead(tempIron); //get iron sensor data
-int potVariable = analogRead(A1);    //get pot data
+sensorVariable = analogRead(pinTempIron); //get iron sensor data
+//int potVariable = analogRead(A1);    //get pot data
 
-pwmControl=map(potVariable,0,1023,0,255); // map pot 0-1023 as 0-255
+//pwmControl=map(potVariable,0,1023,0,255); // map pot 0-1023 as 0-255
 
 
 int buttonUpState=digitalRead(buttonUp);    //get buttons state
@@ -145,33 +289,16 @@ Serial.println("");
 
 // ------------- debug end --------------------//
 
-//----------------  smooth -----------------
-  // subtract the last reading:
-  total = total - readings[readIndex];
-  // read from the sensor:
-  readings[readIndex] = increment;
-  // add the reading to the total:
-  total = total + readings[readIndex];
-  // advance to the next position in the array:
-  readIndex = readIndex + 1;
+smoothIron();
 
-  // if we're at the end of the array...
-  if (readIndex >= numReadings) {
-    // ...wrap around to the beginning:
-    readIndex = 0;
-  }
+show();   // Вывести значение переменной на экран(LED)
+//lcd.display();
+//delay(500);
+//lcd.setCursor(0, 0);
+//lcd.print(millis() / 100);
 
-  // calculate the average:
-  average = total / numReadings;
-  // send it to the computer as ASCII digits
-  //Serial.println(average);
-  //delay(1);        // delay in between reads for stability
+//delay(2000);
 
-  show(average);
-
-//------------------------------------------------------------------  
-
-//show(increment);   // Вывести значение переменной на экран(LED)
 
 if (tempReal < tempSet ){   // Если температура паяльника ниже установленной температуры то:
   if ((tempSet - tempReal) < 16 & (tempSet - tempReal) > 6 )       // Проверяем разницу между 
@@ -203,7 +330,7 @@ else { // Иначе (если температура паяльника рав�
        analogWrite(pinPwmIron, tempPwmReal); // Вывод в шим порт (на транзистор) значение 
      }
 
-tempReal = analogRead(tempIron); // считываем текущую температуру
+tempReal = analogRead(pinTempIron); // считываем текущую температуру
 
 tempReal=map(tempReal,0,764,25,400);       // нужно вычислить
                              // 0 sens is 25 on iron - 764 is 295 on iron
@@ -239,7 +366,7 @@ void tempIronControl(int value) // debouce control iron temp
  // If interrupts come faster than 200ms, assume it's a bounce and ignore
  if (interrupt_time - last_interrupt_time > 50)
  {
-  cyclesToLed = 100; // show value for 100 cycles
+  //cyclesToLed = 100; // show value for 100 cycles
   if (value == 0) // temp Down
     {
     if ( tempSet <= tempMin || (tempSet-5) <= tempMin )
@@ -251,7 +378,7 @@ void tempIronControl(int value) // debouce control iron temp
     else {
           tempSet=tempSet-5;
           increment = tempSet;
-          show(increment);   // Вывести значение переменной на экран(LED)
+          //show(increment);   // Вывести значение переменной на экран(LED)
           //delay(100);
          }
     }
@@ -267,17 +394,99 @@ void tempIronControl(int value) // debouce control iron temp
          }
     increment = tempSet;
     //cyclesTolLed = 100;
-    show(increment);   // Вывести значение переменной на экран(LED)
+    //show(increment);   // Вывести значение переменной на экран(LED)
     //cyclesTolLed = 0;
     //delay(100);
     }
-    cyclesToLed = 0;
+    //cyclesToLed = 0;
  }
  last_interrupt_time = interrupt_time;
 }
 //----------------------------------------------------------------
 
 
+//----------------  smooth iron -----------------
+
+void smoothIron()
+{
+  // subtract the last reading:
+  total = total - readings[readIndex];
+  // read from the sensor:
+  readings[readIndex] = increment;
+  // add the reading to the total:
+  total = total + readings[readIndex];
+  // advance to the next position in the array:
+  readIndex = readIndex + 1;
+
+  // if we're at the end of the array...
+  if (readIndex >= numReadings) {
+    // ...wrap around to the beginning:
+    readIndex = 0;
+  }
+
+  // calculate the average:
+  average = total / numReadings;
+  // send it to the computer as ASCII digits
+  //Serial.println(average);
+  //delay(1);        // delay in between reads for stability
+
+  //show(average);
+}
+
+//------------------------------------------------------------------  
+
+// ----------  LCD ------------------------
+void show()
+{
+  // iron temp 
+ lcd.setCursor(0, 0);
+ lcd.print("I:");
+ lcd.setCursor(2, 0);
+ lcd.print(average);
+ lcd.setCursor(5, 0);
+ lcd.write(byte(0));
+ lcd.setCursor(6, 0);
+ lcd.print(">");
+ lcd.setCursor(8, 0);
+ lcd.print(tempSet);
+ lcd.setCursor(11, 0);
+ lcd.write(byte(0));
+
+ // iron state
+ lcd.setCursor(13, 0);
+ lcd.print("SLP");
+
+ // HeatGun temp
+ lcd.setCursor(0, 1);
+ lcd.print("A:");
+ lcd.setCursor(2, 1);
+ lcd.print(sensorVariable);
+ lcd.setCursor(5, 1);
+ lcd.write(byte(0));
+ lcd.setCursor(6, 1);
+ lcd.print(">");
+ lcd.setCursor(8, 1);
+ lcd.print(tempSet);
+ lcd.setCursor(11, 1);
+ lcd.write(byte(0));
+ 
+ // HeatGun fan speed
+ lcd.setCursor(12, 1);
+ lcd.write(byte(1));
+ //lcd.setCursor(12, 1);
+ //lcd.print("S:");
+ lcd.setCursor(13, 1);
+ lcd.print(tempSet);
+ lcd.setCursor(15, 1);
+ lcd.print("%");
+
+
+ //lcd.noDisplay();
+// delay(1000);
+}
+
+
+/*
 //----------------- LED control -----------------
 
 void offAllLedSegments()
@@ -351,4 +560,5 @@ void show(int value)
     offAllLedSegments();
     } 
   }
-
+  
+*/
