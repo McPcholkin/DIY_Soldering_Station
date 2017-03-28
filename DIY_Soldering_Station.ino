@@ -30,6 +30,10 @@ int tempDiff = 0; //variable to diff temp (set to current)
 
 int increment = 0; //start value of sensor
 
+
+//debug buttons
+int buttonValue = 5;
+
 void setup() {
   Serial.begin(115200);
   pinMode(pinPwmIron, OUTPUT);
@@ -64,11 +68,11 @@ Serial.print(" | ");
 Serial.print("Sensor: ");
 Serial.print(sensorVariable);
 Serial.print(" | ");
-Serial.print("Button UP: ");
-Serial.print(buttonUpState);
-Serial.print(" | ");
-Serial.print("Button Down: ");
-Serial.print(buttonDownState);
+Serial.print("Set Value: ");
+Serial.print(tempSet);
+//Serial.print(" | ");
+//Serial.print("Button Down: ");
+//Serial.print(buttonDownState);
 //Serial.print(" | ");
 
 Serial.println("");
@@ -121,8 +125,30 @@ increment=tempReal;
 
 //---------------- buttons ---------------//
 
+if (digitalRead(buttonUp) == 1) // Если нажата вниз кнопка то понизить температуру на 5
+  {
+   tempIronControl(1);
+  }
+
 if (digitalRead(buttonDown) == 1) // Если нажата вниз кнопка то понизить температуру на 5
   {
+   tempIronControl(0);
+  }
+
+
+
+
+}
+
+void tempIronControl(int value) // deboucet control
+{
+ static unsigned long last_interrupt_time = 0;
+ unsigned long interrupt_time = millis();
+ // If interrupts come faster than 200ms, assume it's a bounce and ignore
+ if (interrupt_time - last_interrupt_time > 100)
+ {
+  if (value == 0) // temp Down
+    {
     if ( tempSet <= tempMin || (tempSet-5) <= tempMin )
     {
       tempSet = tempMin;
@@ -134,10 +160,10 @@ if (digitalRead(buttonDown) == 1) // Если нажата вниз кнопка
           increment = tempSet;
           //show(increment);   // Вывести значение переменной на экран(LED)
          }
-  }
-
-else if (digitalRead(buttonUp) == 1)
-  {
+    }
+ 
+  else if (value == 1) // temp Up
+    {
     if ( tempSet >= tempMax )
       {
         tempSet = tempMax;
@@ -147,7 +173,8 @@ else if (digitalRead(buttonUp) == 1)
          }
     increment = tempSet;
     //show(increment);   // Вывести значение переменной на экран(LED)
-    
-  }
-
+    }
+ }
+ last_interrupt_time = interrupt_time;
 }
+
