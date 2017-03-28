@@ -142,18 +142,20 @@ byte linesFull[8] = {
 // ---------------------------------------------
 
 
-//---------- analog smoothing ---
-const int numReadings = 100;
+//---------- analog smoothing Iron -----------------
+const int numReadingsIron = 100;
 
-int readings[numReadings];      // the readings from the analog input
-int readIndex = 0;              // the index of the current reading
-int total = 0;                  // the running total
-int average = 0;                // the average
+int readingsIron[numReadingsIron];      // the readings from the analog input
+int readIndexIron = 0;              // the index of the current reading
+int totalIron = 0;                  // the running total
+int averageIron = 0;                // the average
 //------------------------------------------
 
-// debug
+
+
+// --------------- debug --------------------
 int sensorVariable = 0; // iron sensor data
-//------------------
+//------------------------------------------
 
 void setup() {
   Serial.begin(115200);
@@ -195,8 +197,8 @@ void setup() {
 
 
   // initialize all the readings to 0:
-  for (int thisReading = 0; thisReading < numReadings; thisReading++) {
-    readings[thisReading] = 0;
+  for (int thisReadingIron = 0; thisReadingIron < numReadingsIron; thisReadingIron++) {
+    readingsIron[thisReadingIron] = 0;
   }
 
 }
@@ -343,27 +345,23 @@ void tempIronControl(int value) // debouce control iron temp
 void smoothIron()
 {
   // subtract the last reading:
-  total = total - readings[readIndex];
+  totalIron = totalIron - readingsIron[readIndexIron];
   // read from the sensor:
-  readings[readIndex] = incrementIron; // bouncing value !
+  readingsIron[readIndexIron] = incrementIron; // bouncing value !
   // add the reading to the total:
-  total = total + readings[readIndex];
+  totalIron = totalIron + readingsIron[readIndexIron];
   // advance to the next position in the array:
-  readIndex = readIndex + 1;
+  readIndexIron = readIndexIron + 1;
 
   // if we're at the end of the array...
-  if (readIndex >= numReadings) {
+  if (readIndexIron >= numReadingsIron) {
     // ...wrap around to the beginning:
-    readIndex = 0;
+    readIndexIron = 0;
   }
 
   // calculate the average:
-  average = total / numReadings;
-  // send it to the computer as ASCII digits
-  //Serial.println(average);
-  //delay(1);        // delay in between reads for stability
+  averageIron = totalIron / numReadingsIron;
 
-  //show(average);
 }
 
 //------------------------------------------------------------------  
@@ -375,7 +373,7 @@ void show()
  lcd.setCursor(0, 0);
  lcd.print("I:");
  lcd.setCursor(2, 0);
- lcd.print(average);
+ lcd.print(averageIron);
  lcd.setCursor(5, 0);
  lcd.write(byte(0));
  lcd.setCursor(6, 0);
