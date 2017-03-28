@@ -5,8 +5,8 @@
  */
 
 int pot = A1; // pot for testing
-int pwm = 10; // pwm to mosfet
-int temp = A0; // input from termal sensor in iron
+int pinPwmIron = 10; // pwm to mosfet
+int tempIron = A0; // input from termal sensor in iron
 int pwmControl = 0; //var to save pwm value
 
 // control buttons
@@ -17,7 +17,7 @@ int buttonDown = 12;
 // temp control 
 int tempSet = 230; //default set temp
 int tempMin = 200; //minimum temp
-int tempMax = 280; //max temp
+int tempMax = 350; //max temp
 int tempReal = 250; //val termal sensor var
 int tempPwmMin = 40; //minimal value PWM
 int tempPwmMax = 180; //maximum value PWM
@@ -28,15 +28,15 @@ int tempError = -50; // difference temp (set to real)
 int tempDiff = 0; //variable to diff temp (set to current)
 
 
-
+int increment = 0; //start value of sensor
 
 void setup() {
-  Serial.begin(9600);
-  pinMode(pwm, OUTPUT);
+  Serial.begin(115200);
+  pinMode(pinPwmIron, OUTPUT);
   pinMode(buttonUp, INPUT);
   pinMode(buttonDown, INPUT);
 
-  analogWrite(pinpwm, tempPwmReal); //Вывод  шим в нагрузку паяльника 
+  analogWrite(pinPwmIron, tempPwmReal); //Вывод  шим в нагрузку паяльника 
                                     //(выводим 0 - старт с выключеным паяльником- 
                                     // пока не опредилим состояние температуры)
 
@@ -45,7 +45,7 @@ void setup() {
 void loop() {
 
   
-int sensorVariable = analogRead(A0); //get iron sensor data
+int sensorVariable = analogRead(tempIron); //get iron sensor data
 int potVariable = analogRead(A1);    //get pot data
 
 pwmControl=map(potVariable,0,1023,0,255); // map pot 0-1023 as 0-255
@@ -56,8 +56,10 @@ int buttonDownState=digitalRead(buttonDown);
 
 
 // Debug output
-Serial.print("PWM Pot: ");
-Serial.print(pwmControl);
+//Serial.print("PWM Pot: ");
+//Serial.print(pwmControl);
+Serial.print("Increment: ");
+Serial.print(increment);
 Serial.print(" | ");
 Serial.print("Sensor: ");
 Serial.print(sensorVariable);
@@ -67,13 +69,85 @@ Serial.print(buttonUpState);
 Serial.print(" | ");
 Serial.print("Button Down: ");
 Serial.print(buttonDownState);
+//Serial.print(" | ");
+
 Serial.println("");
-delay(100);
+//delay(100);
 
 
 // set pwm value
-analogWrite(pwm, pwmControl);
+//analogWrite(pinPwmIron, pwmControl);
+
+// ------------- debug end --------------------//
+
+if (tempReal < tempSet ){   // Если температура паяльника ниже установленной температуры то:
+  if ((tempSet - tempReal) < 16 & (tempSet - tempReal) > 6 )       // Проверяем разницу между 
+                                               // установленной температурой и текущей паяльника,
+                                               // Если разница меньше 10 градусов то 
+      {
+        tempPwmReal = 99; // Понижаем мощность нагрева (шим 0-255  мы делаем 99)  - 
+                          // таким образом мы убираем инерцию перегрева
+      }
+
+  else if ((tempSet - tempReal) < 4 )
+    {
+      tempPwmReal = 45; 
+    }
+
+  else 
+    {
+      tempPwmReal = 230; // Иначе Подымаем мощность нагрева(шим 0-255  мы делаем 230) на максимум 
+                         // для быстрого нагрева до нужной температуры
+    }
+
+analogWrite(pinPwmIron, tempPwmReal); // Вывод в шим порт (на транзистор) значение мощности
+
+}
+
+else { // Иначе (если температура паяльника равняется или выше установленной) 
+       tempPwmReal = 0;  // Выключаем мощность нагрева (шим 0-255  мы делаем 0)  - 
+                         // таким образом мы отключаем паяльник
+       analogWrite(pinPwmIron, tempPwmReal); // Вывод в шим порт (на транзистор) значение 
+     }
+
+tempReal = analogRead(tempIron); // считываем текущую температуру
+
+tempReal=map(tempReal,0,764,25,400);       // нужно вычислить
+                             // 0 sens is 25 on iron - 764 is 295 on iron
+                             // 325 - get 228-232 on iron when tempSet = 230
+increment=tempReal;
 
 
+
+//---------------- buttons ---------------//
+
+if (digitalRead(buttonDown) == 1) // Если нажата вниз кнопка то понизить температуру на 5
+  {
+    if ( tempSet <= tempMin || (tempSet-5) <= tempMin )
+    {
+      tempSet = tempMin;
+      increment = tempSet;
+    }
+
+    else {
+          tempSet=tempSet-5;
+          increment = tempSet;
+          //show(increment);   // Вывести значение переменной на экран(LED)
+         }
+  }
+
+else if (digitalRead(buttonUp) == 1)
+  {
+    if ( tempSet >= tempMax )
+      {
+        tempSet = tempMax;
+      }
+    else {
+         tempSet=tempSet+5;
+         }
+    increment = tempSet;
+    //show(increment);   // Вывести значение переменной на экран(LED)
+    
+  }
 
 }
