@@ -24,7 +24,7 @@ int ironButtonDown = 8;
 // iron temp control 
 int ironTempSet = 230; //default set temp
 int ironTempMin = 200; //minimum temp
-int ironTempMax = 350; //max temp
+int ironTempMax = 280; //max temp
 int ironTempReal = 230; //val termal sensor var
 int ironTempPwmMin = 40; //minimal value PWM
 int ironTempPwmMax = 180; //maximum value PWM
@@ -146,6 +146,8 @@ byte linesFull[8] = {
   0b11011,
   0b11011
 };
+
+int lcdRefreshTime = 100;
 
 // ---------------------------------------------
 
@@ -293,7 +295,7 @@ incrementIron=ironTempReal;
 
 
 //---------------- buttons ---------------//
-
+/*
 if (digitalRead(ironButtonUp) == 1) // Если нажата вниз кнопка то понизить температуру на 5
   {
    tempIronControl(1);
@@ -304,6 +306,7 @@ if (digitalRead(ironButtonDown) == 1) // Если нажата вниз кноп
    tempIronControl(0);
   }
 // End loop
+*/
 }
 
 
@@ -377,6 +380,11 @@ void smoothIron()
 // ----------  LCD ------------------------
 void show()
 {
+  static unsigned long last_lcd_refresh_time = 0;
+ unsigned long lcd_refresh_time = millis();
+ // If interrupts come faster than 200ms, assume it's a bounce and ignore
+ if (lcd_refresh_time - last_lcd_refresh_time > lcdRefreshTime)
+ {
   // iron temp 
  lcd.setCursor(0, 0);
  lcd.print("I:");
@@ -399,7 +407,7 @@ void show()
  lcd.setCursor(0, 1);
  lcd.print("A:");
  lcd.setCursor(2, 1);
- lcd.print(sensorVariable);
+ lcd.print(ironTempPwmReal);
  lcd.setCursor(5, 1);
  lcd.write(byte(0));
  lcd.setCursor(6, 1);
@@ -418,6 +426,10 @@ void show()
  lcd.print(50);
  lcd.setCursor(15, 1);
  lcd.print("%");
+
+ last_lcd_refresh_time = lcd_refresh_time;
+}
+ //delay(10);
 }
 
 
