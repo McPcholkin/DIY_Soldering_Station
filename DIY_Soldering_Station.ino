@@ -4,18 +4,18 @@
  */
 // ----------------  Pinout ----------------------
 // iron control
-int pinPwmIron = 6; // pwm to mosfet
-int pinTempIron = A0; // input from termal sensor in iron
+int const pinPwmIron = 6; // pwm to mosfet
+int const pinTempIron = A0; // input from termal sensor in iron
 
 // air control
 // zero cross detector pin = 2
-int pinPwmAir = 3; // pwm to tirac
-int pinPwmAirFan = 5;
-int pinTempAir = A1; // input from termal sensor in iron
+int const pinPwmAir = 3; // pwm to tirac
+int const pinPwmAirFan = 5;
+int const pinTempAir = A1; // input from termal sensor in iron
 
 // control buttons
-int ironPowerToggle = 10;
-int airPowerToggle = 11;
+int const ironPowerToggle = 10;
+int const airPowerToggle = 11;
 
 // -------- LiquidCrystal 16x2 LCD display. --------
 /* The circuit:
@@ -37,7 +37,7 @@ int airPowerToggle = 11;
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(4, 7, 8, 12, 13, 19);
 
-int lcdRefreshTime = 250;
+int const lcdRefreshTime = 250;
 
 // -----------------------------------------------
 // -----------------------------------------------
@@ -58,7 +58,6 @@ int const maxIronTempValue = 400; // max heater temperature
 int const minIronAnalogValue = 0; // sensor value in room temperature
 int const maxIronAnalogValue = 764; // sensor value on max heater temperature
 
-
 // phisical power switch
 boolean ironPowerState = 0; // iron ON state var
 
@@ -70,7 +69,19 @@ int airTempSet = 200; //default set temp
 int const airTempMin = 200; //minimum temp
 int const  airTempMax = 280; //max temp
 int airTempReal = 200; //val termal sensor var
-//int air
+int const airTempPwmMin = 128; //minimal value PWM
+int const airTempPwmHalf = 64; //half value PWM
+int const airTempPwmMax = 0; //maximum value PWM
+int airTempPwmReal = 0; //current PWM value
+
+// Air Calibration
+int const minAirTempValue = 25;  // room temperature
+int const maxAirTempValue = 400; // max heater temperature
+int const minAirAnalogValue = 0; // sensor value in room temperature
+int const maxAirAnalogValue = 764; // sensor value on max heater temperature
+
+// phisical power switch
+boolean airPowerState = 0; // Air ON state var
 
 
 // increment to save current temp value
