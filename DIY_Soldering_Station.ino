@@ -44,18 +44,34 @@ int lcdRefreshTime = 250;
 
 // iron temp control 
 int ironTempSet = 200; //default set temp
-int ironTempMin = 200; //minimum temp
-int ironTempMax = 280; //max temp
+int const ironTempMin = 200; //minimum temp
+int const  ironTempMax = 280; //max temp
 int ironTempReal = 230; //val termal sensor var
-int ironTempPwmMin = 40; //minimal value PWM
-int ironTempPwmMax = 180; //maximum value PWM
+int const ironTempPwmMin = 45; //minimal value PWM
+int const ironTempPwmHalf = 99; //half value PWM
+int const ironTempPwmMax = 230; //maximum value PWM
 int ironTempPwmReal = 0; //current PWM value
 
+// Iron Calibration
+int const minIronTempValue = 25;  // room temperature
+int const maxIronTempValue = 400; // max heater temperature
+int const minIronAnalogValue = 0; // sensor value in room temperature
+int const maxIronAnalogValue = 764; // sensor value on max heater temperature
+
+
+// phisical power switch
 boolean ironPowerState = 0; // iron ON state var
 
 // int tempError = -50; // difference temp (set to real)  -- not used?
-
 // int tempDiff = 0; //variable to diff temp (set to current) -- not used?
+
+// air temp control
+int airTempSet = 200; //default set temp
+int const airTempMin = 200; //minimum temp
+int const  airTempMax = 280; //max temp
+int airTempReal = 200; //val termal sensor var
+//int air
+
 
 // increment to save current temp value
 int incrementIron = 000; //start value of iron sensor
@@ -260,18 +276,18 @@ if (ironTempReal < ironTempSet ){   // Если температура паял�
                                                // установленной температурой и текущей паяльника,
                                                // Если разница меньше 10 градусов то 
       {
-        ironTempPwmReal = 99; // Понижаем мощность нагрева (шим 0-255  мы делаем 99)  - 
+        ironTempPwmReal = ironTempPwmHalf; // Понижаем мощность нагрева (шим 0-255  мы делаем 99)  - 
                           // таким образом мы убираем инерцию перегрева
       }
 
-  else if ((ironTempSet - ironTempReal) < 4 )
+  else if ((ironTempSet - ironTempReal) < 4 ) // if difference less 4 degree use min temp
     {
-      ironTempPwmReal = 45; 
+      ironTempPwmReal = ironTempPwmMin; 
     }
 
   else 
     {
-      ironTempPwmReal = 230; // Иначе Подымаем мощность нагрева(шим 0-255  мы делаем 230) на максимум 
+      ironTempPwmReal = ironTempPwmMax; // Иначе Подымаем мощность нагрева(шим 0-255  мы делаем 230) на максимум 
                          // для быстрого нагрева до нужной температуры
     }
 
@@ -287,7 +303,8 @@ else { // Иначе (если температура паяльника рав�
 
 ironTempReal = analogRead(pinTempIron); // считываем текущую температуру
 
-ironTempReal=map(ironTempReal,0,764,25,400);       // нужно вычислить
+// scale heater temperature to sensor values
+ironTempReal=map(ironTempReal,minIronAnalogValue,maxIronAnalogValue,minIronTempValue,maxIronTempValue); // нужно вычислить
                              // 0 sens is 25 on iron - 764 is 295 on iron
                              // 400 - get 228-232 on iron when ironTempSet = 230
 incrementIron=ironTempReal;
@@ -384,7 +401,7 @@ void smoothIron()
 
 //------------------------------------------------------------------  
 
-// ----------  LCD ------------------------
+// ----------------------------------  LCD ------------------------
 void show()
 {
   static unsigned long last_lcd_refresh_time = 0;
@@ -455,7 +472,6 @@ void show()
 
  last_lcd_refresh_time = lcd_refresh_time;
 }
- //delay(10);
 }
 
 
