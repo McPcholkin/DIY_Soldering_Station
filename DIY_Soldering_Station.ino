@@ -415,24 +415,25 @@ else
 // --------------  Air Fan control  --------------------------
 if ( airPowerState == 1 && airCooldownState == 0 ) // if cooling not start - normal work
 {
+  // get PWM value from % value
   fanSpeedPwmReal=map(fanSpeedSet, fanSpeedMin, fanSpeedMax, fanSpeedPwmMin, fanSpeedPwmMax);
   analogWrite(pinPwmAirFan, fanSpeedPwmReal); 
 }
-else if ( airPowerState == 0 )
+else if ( airPowerState == 0 ) // if air switch off
 {
-  if ( airCooldownState = 1 )
+  if ( airCooldownState = 1 ) //  if cooling trigered
   {
-   if (incrementAir > minAirTempValue)
+   if (incrementAir > minAirTempValue) // if air switch off and temp more than room temp
     {
-      analogWrite(pinPwmAirFan, fanSpeedPwmMax);
+      analogWrite(pinPwmAirFan, fanSpeedPwmMax); // run fan on max speed to cooling
     }
     else
-    {
+    { // when temp down to room temp disable cooling triger
       airCooldownState = 0;        // cooldown stoped, air temp eq room temp
     }
   }
   else
-  {
+  { // if air is off and cooling not start just off fan
     analogWrite(pinPwmAirFan, 0);
   }
   
