@@ -90,7 +90,7 @@ boolean airPowerState = 0; // Air ON state var
 int fanSpeedSet = 50;       //default set fan speed in %
 int const fanSpeedMin = 30; // min fan speed in %
 int const fanSpeedMax = 99; // max fan speed in %
-int fanSpeedReal = 50;      // current fan speed in %
+//int fanSpeedReal = 50;      // current fan speed in %
 int const fanSpeedPwmMin = 20;  // min PWM value
 int const fanSpeedPwmMax = 255; // max PWM value
 int fanSpeedPwmReal = 0; // current PWM value
@@ -413,9 +413,10 @@ else
 
 
 // --------------  Air Fan control  --------------------------
-if ( airPowerState == 1 && airCooldownState == 0 )
+if ( airPowerState == 1 && airCooldownState == 0 ) // if cooling not start - normal work
 {
-  analogWrite(pinPwmAirFan, fanSpeedPwmReal);
+  fanSpeedPwmReal=map(fanSpeedSet, fanSpeedMin, fanSpeedMax, fanSpeedPwmMin, fanSpeedPwmMax);
+  analogWrite(pinPwmAirFan, fanSpeedPwmReal); 
 }
 else if ( airPowerState == 0 )
 {
