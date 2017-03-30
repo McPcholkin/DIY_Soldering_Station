@@ -2,24 +2,45 @@
  * Arduino soldering station project
  * McPcholkin https://github.com/McPcholkin/DIY_Soldering_Station
  */
-
+// ----------------  Pinout ----------------------
 // iron control
-int pinPwmIron = 9; // pwm to mosfet
+int pinPwmIron = 6; // pwm to mosfet
 int pinTempIron = A0; // input from termal sensor in iron
-//int pwmControlIron = 0; //var to save pwm value -- not used?
 
-// iron control
-int pinPwmAir = 6; // pwm to mosfet
-int pinPwmAirFan = 10;
+// air control
+// zero cross detector pin = 2
+int pinPwmAir = 3; // pwm to tirac
+int pinPwmAirFan = 5;
 int pinTempAir = A1; // input from termal sensor in iron
-//int pwmControl = 0; //var to save pwm value -- not used?
 
 // control buttons
-int ironButtonUp = 7;
-int ironButtonDown = 8;
-//int airButtonUp = 5;
-//int airButtonDown = 6;
+int ironPowerToggle = 10;
+int airPowerToggle = 11;
 
+// -------- LiquidCrystal 16x2 LCD display. --------
+/* The circuit:
+ * LCD RS pin to digital pin 4
+ * LCD Enable pin to digital pin 7
+ * LCD D4 pin to digital pin 8
+ * LCD D5 pin to digital pin 12
+ * LCD D6 pin to digital pin 13
+ * LCD D7 pin to digital pin 19 (A5)
+ * LCD R/W pin to ground
+ * 10K resistor:
+ * ends to +5V and ground
+ * wiper to LCD VO pin (pin 3)
+ */
+ 
+// include the library code:
+#include <LiquidCrystal.h>
+
+// initialize the library with the numbers of the interface pins
+LiquidCrystal lcd(4, 7, 8, 12, 13, 19);
+
+int lcdRefreshTime = 250;
+
+// -----------------------------------------------
+// -----------------------------------------------
 
 // iron temp control 
 int ironTempSet = 200; //default set temp
@@ -30,36 +51,17 @@ int ironTempPwmMin = 40; //minimal value PWM
 int ironTempPwmMax = 180; //maximum value PWM
 int ironTempPwmReal = 0; //current PWM value
 
+boolean ironPowerState = 0; // iron ON state var
+
 // int tempError = -50; // difference temp (set to real)  -- not used?
 
 // int tempDiff = 0; //variable to diff temp (set to current) -- not used?
 
+// increment to save current temp value
 int incrementIron = 000; //start value of iron sensor
 int incrementAir = 000; //start value of air sensor
 
-
-// -------- LiquidCrystal 16x2 LCD display. --------
-/* The circuit:
- * LCD RS pin to digital pin 12
- * LCD Enable pin to digital pin 11
- * LCD D4 pin to digital pin 5
- * LCD D5 pin to digital pin 4
- * LCD D6 pin to digital pin 3
- * LCD D7 pin to digital pin 2
- * LCD R/W pin to ground
- * 10K resistor:
- * ends to +5V and ground
- * wiper to LCD VO pin (pin 3)
- */
-
-// include the library code:
-#include <LiquidCrystal.h>
-
-// initialize the library with the numbers of the interface pins
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
-
-// make some custom characters 5x8 pix:
-
+// -------- make some custom characters 5x8 pix:
 byte degree[8] = {
   0b11100,
   0b10100,
@@ -70,7 +72,6 @@ byte degree[8] = {
   0b00000,
   0b00000
 };
-
 byte term[8] = {
   0b00100,
   0b01010,
@@ -81,7 +82,6 @@ byte term[8] = {
   0b10001,
   0b01110
 };
-
 byte fan[8] = {
   0b00000,
   0b11001,
@@ -92,7 +92,6 @@ byte fan[8] = {
   0b00000,
   0b00000,
 };
-
 byte ironTop[8] = {
   0b00001,
   0b00010,
@@ -113,7 +112,6 @@ byte ironBottom[8] = {
   0b00100,
   0b00100
 };
-
 byte heat[8] = {
   0b11111,
   0b10101,
@@ -124,7 +122,6 @@ byte heat[8] = {
   0b00000,
   0b00000
 };
-
 byte linesLeft[8] = {
   0b00011,
   0b11011,
@@ -135,7 +132,6 @@ byte linesLeft[8] = {
   0b11011,
   0b11011
 };
-
 byte linesFull[8] = {
   0b11011,
   0b11011,
@@ -146,9 +142,6 @@ byte linesFull[8] = {
   0b11011,
   0b11011
 };
-
-int lcdRefreshTime = 250;
-
 // ---------------------------------------------
 
 
@@ -167,17 +160,20 @@ int averageIron = 0;                // the average
 int sensorVariable = 0; // iron sensor data
 //------------------------------------------
 
+
 void setup() {
   Serial.begin(115200);
   pinMode(pinPwmIron, OUTPUT);
-  pinMode(ironButtonUp, INPUT);
-  pinMode(ironButtonDown, INPUT);
+  pinMode(pinPwmAir, OUTPUT);
+  pinMode(pinPwmAirFan, OUTPUT);
+  pinMode(ironPowerToggle, INPUT);
+  pinMode(airPowerToggle, INPUT);
 
   analogWrite(pinPwmIron, ironTempPwmReal); //Вывод  шим в нагрузку паяльника 
                                     //(выводим 0 - старт с выключеным паяльником- 
                                     // пока не опредилим состояние температуры)
 
-  // ---- LCD ----
+  // ------------------ LCD -----------------
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
 
@@ -203,10 +199,10 @@ void setup() {
   delay(2000);
   // clear display from welcome message
   lcd.clear();
-  //---- LCD ----
+  //---------------------- LCD --------------
 
 
-  // initialize all the readings to 0:
+  // initialize all the readings iron temp to 0:
   for (int thisReadingIron = 0; thisReadingIron < numReadingsIron; thisReadingIron++) {
     readingsIron[thisReadingIron] = 0;
   }
@@ -216,13 +212,12 @@ void setup() {
 void loop() {
 
 // ------------- debug  --------------------//
-  
 sensorVariable = analogRead(pinTempIron); //get iron sensor data
 //int potVariable = analogRead(A1);    //get pot data
 //pwmControl=map(potVariable,0,1023,0,255); // map pot 0-1023 as 0-255
 
-int buttonUpState=digitalRead(ironButtonUp);    //get buttons state
-int buttonDownState=digitalRead(ironButtonDown);
+//int buttonUpState=digitalRead(ironButtonUp);    //get buttons state
+//int buttonDownState=digitalRead(ironButtonDown);
 
 // Debug output
 //Serial.print("PWM Pot: ");
@@ -244,8 +239,9 @@ Serial.println("");
 //delay(100);
 // set pwm value
 //analogWrite(pinPwmIron, pwmControl);
-
 // ------------- debug end --------------------//
+
+// Main code
 
 // smooth iron meshure values
 smoothIron();
@@ -255,6 +251,10 @@ show();
 
 
 // ------------------------------  Iron temp control  -------------------------------------------------------
+
+if ( digitalRead(ironPowerToggle == HIGH)) // if iron "ON" switch is enabled
+{
+  ironPowerState = 1; // chandge power state of iron to ON
 if (ironTempReal < ironTempSet ){   // Если температура паяльника ниже установленной температуры то:
   if ((ironTempSet - ironTempReal) < 16 & (ironTempSet - ironTempReal) > 6 )       // Проверяем разницу между 
                                                // установленной температурой и текущей паяльника,
@@ -291,6 +291,13 @@ ironTempReal=map(ironTempReal,0,764,25,400);       // нужно вычисли�
                              // 0 sens is 25 on iron - 764 is 295 on iron
                              // 400 - get 228-232 on iron when ironTempSet = 230
 incrementIron=ironTempReal;
+}
+else
+{
+  analogWrite(pinPwmIron,0); // Disable iron heater if switch off
+  ironPowerState = 0; // chandge iron power state to OFF
+}
+
 //----------------------------------------------------------------------------------------------------
 
 
@@ -385,20 +392,37 @@ void show()
  // If interrupts come faster than 200ms, assume it's a bounce and ignore
  if (lcd_refresh_time - last_lcd_refresh_time > lcdRefreshTime)
  {
-  // iron temp 
- lcd.setCursor(0, 0);
- lcd.print("I:");
- lcd.setCursor(2, 0);
- lcd.print(averageIron);
- lcd.setCursor(5, 0);
- lcd.write(byte(0));
- lcd.setCursor(6, 0);
- lcd.print(">");
- lcd.setCursor(8, 0);
- lcd.print(ironTempSet);
- lcd.setCursor(11, 0);
- lcd.write(byte(0));
-
+  if (ironPowerState == 1)
+  {
+   // iron temp when iron is ON
+   lcd.setCursor(0, 0);
+   lcd.print("I:");
+   lcd.setCursor(2, 0);
+   lcd.print(averageIron);
+   lcd.setCursor(5, 0);
+   lcd.write(byte(0));
+   lcd.setCursor(6, 0);
+   lcd.print(">");
+   lcd.setCursor(8, 0);
+   lcd.print(ironTempSet);
+   lcd.setCursor(11, 0);
+   lcd.write(byte(0));
+  }
+  else // iron is off
+  {
+   lcd.setCursor(0, 0);
+   lcd.print("I:");
+   lcd.setCursor(2, 0);
+   lcd.print("OFF");
+   lcd.setCursor(5, 0);
+   lcd.write(" ");
+   lcd.setCursor(6, 0);
+   lcd.print(">");
+   lcd.setCursor(8, 0);
+   lcd.print(ironTempSet);
+   lcd.setCursor(11, 0);
+   lcd.write(byte(0));
+  }
  // iron state
  lcd.setCursor(13, 0);
  lcd.print("SLP");

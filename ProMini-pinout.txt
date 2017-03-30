@@ -5,19 +5,19 @@
 6 - pwm = Iron control
 7       = LCD Enable
 8       = LCD D4
-9 - pwm
-
-10 - pwm
-11 - pwm
+9 - pwm = Buzzer
+ 
+10 - pwm = Iron Switch
+11 - pwm = Air Switch
 12      = LCD D5
 13      = LCD D6 
 
 
 A0 - 14 = Iron Temp
 A1 - 15 = Fan Temp
-A2 - 16
-A3 - 17
-A4 - 18
+A2 - 16 = control buttons input
+A3 - 17 = Air magnet switch (as digital input)
+A4 - 18 
 A5 - 19 = LCD D7 (as digital)
 A6 
 A7 
