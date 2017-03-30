@@ -2,6 +2,9 @@
  * Arduino soldering station project
  * McPcholkin https://github.com/McPcholkin/DIY_Soldering_Station
  */
+// enable debug serial output
+#define DEBUG 1
+ 
 // ----------------  Pinout ----------------------
 // iron control
 int const pinPwmIron = 6; // pwm to mosfet
@@ -189,7 +192,11 @@ int sensorVariable = 0; // iron sensor data
 
 
 void setup() {
-  Serial.begin(115200);
+  //debug
+  #ifdef DEBUG
+    Serial.begin(115200);
+  #endif
+    
   pinMode(pinPwmIron, OUTPUT);
   pinMode(pinPwmAir, OUTPUT);
   pinMode(pinPwmAirFan, OUTPUT);
@@ -228,7 +235,6 @@ void setup() {
   lcd.clear();
   //---------------------- LCD --------------
 
-
   // initialize all the readings iron temp to 0:
   for (int thisReadingIron = 0; thisReadingIron < numReadingsIron; thisReadingIron++) {
     readingsIron[thisReadingIron] = 0;
@@ -237,9 +243,10 @@ void setup() {
 }
 
 void loop() {
-
+#ifdef DEBUG
 // ------------- debug  --------------------//
 sensorVariable = analogRead(pinTempIron); //get iron sensor data
+sensorVariable = analogRead(pinTempAir); //get iron sensor data
 //int potVariable = analogRead(A1);    //get pot data
 //pwmControl=map(potVariable,0,1023,0,255); // map pot 0-1023 as 0-255
 
@@ -249,17 +256,20 @@ sensorVariable = analogRead(pinTempIron); //get iron sensor data
 // Debug output
 //Serial.print("PWM Pot: ");
 //Serial.print(pwmControl);
-Serial.print("Increment: ");
+Serial.print("Inc Iron: ");
 Serial.print(incrementIron);
 Serial.print(" | ");
-Serial.print("Sensor: ");
+Serial.print("Sensor Iron: ");
 Serial.print(sensorVariable);
 Serial.print(" | ");
-Serial.print("Set Value: ");
+Serial.print("Set Iron: ");
 Serial.print(ironTempSet);
-//Serial.print(" | ");
-//Serial.print("Button Down: ");
-//Serial.print(buttonDownState);
+Serial.print(" | ");
+Serial.print("Iron On: ");
+Serial.print(ironPowerState);
+Serial.println("");
+Serial.print("Inc Air: ");
+Serial.print(incrementAir);
 //Serial.print(" | ");
 
 Serial.println("");
@@ -267,8 +277,9 @@ Serial.println("");
 // set pwm value
 //analogWrite(pinPwmIron, pwmControl);
 // ------------- debug end --------------------//
+#endif
 
-// Main code
+// ---------------------  Main code --------------------------------------------------------------
 
 // smooth iron meshure values
 smoothIron();
@@ -315,7 +326,7 @@ else { // Иначе (если температура паяльника рав�
 ironTempReal = analogRead(pinTempIron); // считываем текущую температуру
 
 // scale heater temperature to sensor values
-ironTempReal=map(ironTempReal,minIronAnalogValue,maxIronAnalogValue,minIronTempValue,maxIronTempValue); // нужно вычислить
+ironTempReal=map(ironTempReal, minIronAnalogValue, maxIronAnalogValue, minIronTempValue, maxIronTempValue); // нужно вычислить
                              // 0 sens is 25 on iron - 764 is 295 on iron
                              // 400 - get 228-232 on iron when ironTempSet = 230
 incrementIron=ironTempReal;
