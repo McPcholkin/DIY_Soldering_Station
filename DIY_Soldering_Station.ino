@@ -67,25 +67,36 @@ boolean ironPowerState = 0; // iron ON state var
 // int tempError = -50; // difference temp (set to real)  -- not used?
 // int tempDiff = 0; //variable to diff temp (set to current) -- not used?
 
-// air temp control
-int airTempSet = 200; //default set temp
-int const airTempMin = 200; //minimum temp
-int const  airTempMax = 280; //max temp
-int airTempReal = 200; //val termal sensor var
-int const airTempPwmMin = 128; //minimal value PWM
+// Air temp control
+int airTempSet = 200;          //default set temp
+int const airTempMin = 200;    //minimum temp
+int const airTempMax = 280;    //max temp
+int airTempReal = 200;         //val termal sensor var
+int const airTempPwmMin = 100; //minimal value PWM
 int const airTempPwmHalf = 64; //half value PWM
-int const airTempPwmMax = 0; //maximum value PWM
-int airTempPwmReal = 0; //current PWM value
+int const airTempPwmMax = 0;   //maximum value PWM
+int airTempPwmReal = 0;        //current PWM value
 
 // Air Calibration
-int const minAirTempValue = 25;  // room temperature
-int const maxAirTempValue = 400; // max heater temperature
-int const minAirAnalogValue = 0; // sensor value in room temperature
+int const minAirTempValue = 25;    // room temperature
+int const maxAirTempValue = 400;   // max heater temperature
+int const minAirAnalogValue = 0;   // sensor value in room temperature
 int const maxAirAnalogValue = 764; // sensor value on max heater temperature
 
 // phisical power switch
 boolean airPowerState = 0; // Air ON state var
 
+// Air Fan control
+int fanSpeedSet = 50;       //default set fan speed in %
+int const fanSpeedMin = 30; // min fan speed in %
+int const fanSpeedMax = 99; // max fan speed in %
+int fanSpeedReal = 50;      // current fan speed in %
+int const fanSpeedPwmMin = 20;  // min PWM value
+int const fanSpeedPwmMax = 255; // max PWM value
+int fanSpeedPwmReal = 0; // current PWM value
+
+// colling state
+boolean airCooldown = 0; // air gun cooling down
 
 // increment to save current temp value
 int incrementIron = 000; //start value of iron sensor
@@ -207,6 +218,8 @@ void setup() {
                                     //(выводим 0 - старт с выключеным паяльником- 
                                     // пока не опредилим состояние температуры)
 
+  analogWrite(pinPwmAirFan, fanSpeedPwmReal);                          
+
   // ------------------ LCD -----------------
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
@@ -290,16 +303,16 @@ show();
 
 // ------------------------------  Iron temp control  -------------------------------------------------------
 
-if ( digitalRead(ironPowerToggle == HIGH)) // if iron "ON" switch is enabled
-{
+if ( digitalRead(ironPowerToggle == HIGH)){ // if iron "ON" switch is enabled
   ironPowerState = 1; // chandge power state of iron to ON
-if (ironTempReal < ironTempSet ){   // Если температура паяльника ниже установленной температуры то:
-  if ((ironTempSet - ironTempReal) < 16 & (ironTempSet - ironTempReal) > 6 )       // Проверяем разницу между 
-                                               // установленной температурой и текущей паяльника,
-                                               // Если разница меньше 10 градусов то 
+  
+  if (ironTempReal < ironTempSet ){   // Если температура паяльника ниже установленной температуры то:
+    if ((ironTempSet - ironTempReal) < 16 & (ironTempSet - ironTempReal) > 6 )  // Проверяем разницу между 
+                                                         // установленной температурой и текущей паяльника,
+                                                         // Если разница меньше 10 градусов то 
       {
         ironTempPwmReal = ironTempPwmHalf; // Понижаем мощность нагрева (шим 0-255  мы делаем 99)  - 
-                          // таким образом мы убираем инерцию перегрева
+                                           // таким образом мы убираем инерцию перегрева
       }
 
   else if ((ironTempSet - ironTempReal) < 4 ) // if difference less 4 degree use min temp
@@ -310,35 +323,100 @@ if (ironTempReal < ironTempSet ){   // Если температура паял�
   else 
     {
       ironTempPwmReal = ironTempPwmMax; // Иначе Подымаем мощность нагрева(шим 0-255  мы делаем 230) на максимум 
-                         // для быстрого нагрева до нужной температуры
+                                        // для быстрого нагрева до нужной температуры
     }
 
-analogWrite(pinPwmIron, ironTempPwmReal); // Вывод в шим порт (на транзистор) значение мощности
+  analogWrite(pinPwmIron, ironTempPwmReal); // Вывод в шим порт (на транзистор) значение мощности
+  }
 
-}
-
-else { // Иначе (если температура паяльника равняется или выше установленной) 
+  else { // Иначе (если температура паяльника равняется или выше установленной) 
        ironTempPwmReal = 0;  // Выключаем мощность нагрева (шим 0-255  мы делаем 0)  - 
                          // таким образом мы отключаем паяльник
        analogWrite(pinPwmIron, ironTempPwmReal); // Вывод в шим порт (на транзистор) значение 
-     }
+       }
 
-ironTempReal = analogRead(pinTempIron); // считываем текущую температуру
+  ironTempReal = analogRead(pinTempIron); // считываем текущую температуру
 
-// scale heater temperature to sensor values
-ironTempReal=map(ironTempReal, minIronAnalogValue, maxIronAnalogValue, minIronTempValue, maxIronTempValue); // нужно вычислить
+  // scale heater temperature to sensor values
+  ironTempReal=map(ironTempReal, minIronAnalogValue, maxIronAnalogValue, minIronTempValue, maxIronTempValue); 
+                             // нужно вычислить
                              // 0 sens is 25 on iron - 764 is 295 on iron
                              // 400 - get 228-232 on iron when ironTempSet = 230
-incrementIron=ironTempReal;
+  incrementIron=ironTempReal;
 }
 else
 {
-  analogWrite(pinPwmIron,0); // Disable iron heater if switch off
-  ironPowerState = 0; // chandge iron power state to OFF
+  analogWrite(pinPwmIron, 0); // Disable iron heater if switch off
+  ironPowerState = 0;        // chandge iron power state to OFF
 }
 
 //----------------------------------------------------------------------------------------------------
 
+// ------------------------------  Air temp control  -------------------------------------------------------
+
+if ( digitalRead(airPowerToggle == HIGH)){ // if iron "ON" switch is enabled
+  airPowerState = 1; // chandge power state of iron to ON
+  
+  if (airTempReal < airTempSet ){   // if temp of AirGun less set temp than:
+    if ((airTempSet - airTempReal) < 16 & (airTempSet - airTempReal) > 6 )  // check difference between
+                                                         // set air temp and current temp,
+                                                         // If difference less 10 degree than 
+      {
+        airTempPwmReal = airTempPwmHalf; // set heat power to half (pwm 128-0  we set  64)  - 
+                                         // таким образом мы убираем инерцию перегрева
+      }
+
+  else if ((airTempSet - airTempReal) < 4 ) // if difference less 4 degree use min temp
+    {
+      airTempPwmReal = airTempPwmMin; 
+    }
+
+  else 
+    {
+      airTempPwmReal = airTempPwmMax; // Иначе Подымаем мощность нагрева(шим 0-255  мы делаем 230) на максимум 
+                                        // для быстрого нагрева до нужной температуры
+    }
+
+  analogWrite(pinPwmAir, airTempPwmReal); // Вывод в шим порт (на транзистор) значение мощности
+  }
+
+  else { // Иначе (если температура паяльника равняется или выше установленной) 
+       airTempPwmReal = 0;  // Выключаем мощность нагрева (шим 0-255  мы делаем 0)  - 
+                         // таким образом мы отключаем паяльник
+       analogWrite(pinPwmAir, airTempPwmReal); // Вывод в шим порт (на транзистор) значение 
+       }
+
+  airTempReal = analogRead(pinTempAir); // считываем текущую температуру
+
+  // scale heater temperature to sensor values
+  airTempReal=map(airTempReal, minAirAnalogValue, maxAirAnalogValue, minAirTempValue, maxAirTempValue); 
+                             // нужно вычислить
+                             // 0 sens is 25 on iron - 764 is 295 on iron
+                             // 400 - get 228-232 on iron when ironTempSet = 230
+  incrementAir=airTempReal;
+}
+else
+{
+  analogWrite(pinPwmAir, 0); // Disable iron heater if switch off
+  airPowerState = 0;        // chandge iron power state to OFF
+  airCooldown = 1;
+}
+
+//----------------------------------------------------------------------------------------------------
+
+
+
+// --------------  Air Fan control  --------------------------
+if ( airPowerState == 1 && airCooldown ==0)
+{
+  analogWrite(pinPwmAirFan, fanSpeedPwmReal);
+}
+else if ( airCooldown == 1 && airPowerState == 0)
+{
+  analogWrite(pinPwmAirFan, fanSpeedPwmMax);
+  
+}
+//------------------------------------------------------
 
 //---------------- buttons ---------------//
 /*
@@ -486,7 +564,7 @@ void show()
  //lcd.setCursor(12, 1);
  //lcd.print("S:");
  lcd.setCursor(13, 1);
- lcd.print(50);
+ lcd.print(fanSpeedSet);
  lcd.setCursor(15, 1);
  lcd.print("%");
 
