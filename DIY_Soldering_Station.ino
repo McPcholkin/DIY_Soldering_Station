@@ -96,7 +96,9 @@ int const fanSpeedPwmMax = 255; // max PWM value
 int fanSpeedPwmReal = 0; // current PWM value
 
 // colling state
-boolean airCooldown = 0; // air gun cooling down
+boolean airCooldownState = 0; // air gun cooling down 
+unsigned long airCooldownStartTime; // air gun cooling start time
+unsigned long const airCooldownTime = 90000; // 90 sec to cool heater
 
 // increment to save current temp value
 int incrementIron = 000; //start value of iron sensor
@@ -356,7 +358,7 @@ else
 
 if ( digitalRead(airPowerToggle == HIGH)){ // if iron "ON" switch is enabled
   airPowerState = 1; // chandge power state of iron to ON
-  
+   
   if (airTempReal < airTempSet ){   // if temp of AirGun less set temp than:
     if ((airTempSet - airTempReal) < 16 & (airTempSet - airTempReal) > 6 )  // check difference between
                                                          // set air temp and current temp,
@@ -399,7 +401,11 @@ else
 {
   analogWrite(pinPwmAir, 0); // Disable iron heater if switch off
   airPowerState = 0;        // chandge iron power state to OFF
-  airCooldown = 1;
+  if ( airCooldownState == 0 )
+  {
+    airCooldownStartTime = millis(); // set cooldown start time
+    airCooldownState = 1;        // cooldown started
+  }
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -407,13 +413,24 @@ else
 
 
 // --------------  Air Fan control  --------------------------
-if ( airPowerState == 1 && airCooldown ==0)
+if ( airPowerState == 1 && airCooldownState == 0 )
 {
   analogWrite(pinPwmAirFan, fanSpeedPwmReal);
 }
-else if ( airCooldown == 1 && airPowerState == 0)
+else if ( airPowerState == 0 )
 {
-  analogWrite(pinPwmAirFan, fanSpeedPwmMax);
+  if ( airCooldownState = 1 )
+  {
+    unsigned long last_cooldown_time = 0;
+    if (last_cooldown_time - airCooldownStartTime < airCooldownTime)
+    {
+      analogWrite(pinPwmAirFan, fanSpeedPwmMax);
+    }
+  }
+  else
+  {
+    analogWrite(pinPwmAirFan, 0);
+  }
   
 }
 //------------------------------------------------------
