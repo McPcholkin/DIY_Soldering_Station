@@ -22,7 +22,7 @@ int ironButtonDown = 8;
 
 
 // iron temp control 
-int ironTempSet = 230; //default set temp
+int ironTempSet = 200; //default set temp
 int ironTempMin = 200; //minimum temp
 int ironTempMax = 280; //max temp
 int ironTempReal = 230; //val termal sensor var
@@ -147,7 +147,7 @@ byte linesFull[8] = {
   0b11011
 };
 
-int lcdRefreshTime = 100;
+int lcdRefreshTime = 250;
 
 // ---------------------------------------------
 
@@ -426,6 +426,8 @@ void show()
  lcd.print(50);
  lcd.setCursor(15, 1);
  lcd.print("%");
+
+
 
  last_lcd_refresh_time = lcd_refresh_time;
 }
