@@ -97,8 +97,8 @@ int fanSpeedPwmReal = 0; // current PWM value
 
 // colling state
 boolean airCooldownState = 0; // air gun cooling down 
-unsigned long airCooldownStartTime; // air gun cooling start time
-unsigned long const airCooldownTime = 90000; // 90 sec to cool heater
+//unsigned long airCooldownStartTime; // air gun cooling start time
+//unsigned long const airCooldownTime = 90000; // 90 sec to cool heater
 
 // increment to save current temp value
 int incrementIron = 000; //start value of iron sensor
@@ -401,9 +401,9 @@ else
 {
   analogWrite(pinPwmAir, 0); // Disable iron heater if switch off
   airPowerState = 0;        // chandge iron power state to OFF
-  if ( airCooldownState == 0 )
-  {
-    airCooldownStartTime = millis(); // set cooldown start time
+
+  if ( airCooldownState == 0 && incrementAir > minAirTempValue ) // if cooling not start and air temp 
+  {                                                             // more room temp
     airCooldownState = 1;        // cooldown started
   }
 }
@@ -421,10 +421,13 @@ else if ( airPowerState == 0 )
 {
   if ( airCooldownState = 1 )
   {
-    unsigned long last_cooldown_time = 0;
-    if (last_cooldown_time - airCooldownStartTime < airCooldownTime)
+   if (incrementAir > minAirTempValue)
     {
       analogWrite(pinPwmAirFan, fanSpeedPwmMax);
+    }
+    else
+    {
+      airCooldownState = 0;        // cooldown stoped, air temp eq room temp
     }
   }
   else
