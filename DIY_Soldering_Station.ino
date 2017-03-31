@@ -344,7 +344,7 @@ if ( digitalRead(ironPowerToggle == HIGH)){ // if iron "ON" switch is enabled
                              // нужно вычислить
                              // 0 sens is 25 on iron - 764 is 295 on iron
                              // 400 - get 228-232 on iron when ironTempSet = 230
-  incrementIron=ironTempReal;
+  incrementIron=ironTempReal; // убрать эту строчку соеденив с предидущей!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 }
 else
 {
