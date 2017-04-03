@@ -1,11 +1,11 @@
 2       = interapt zero cross detectot air heater
-3 - pwm = Air heater control
+3 - pwm = Buzzer             
 4       = LCD RS
 5 - pwm = Air Fan control
 6 - pwm = Iron control
 7       = LCD Enable
 8       = LCD D4
-9 - pwm = Buzzer
+9 - pwm = Air heater control
  
 10 - pwm = Iron Switch
 11 - pwm = Air Switch
