@@ -7,18 +7,18 @@
  
 // ----------------  Pinout ----------------------
 // iron control
-int const pinPwmIron = 6; // pwm to mosfet
-int const pinTempIron = A0; // input from termal sensor in iron
+const int pinPwmIron = 6; // pwm to mosfet
+const int pinTempIron = A0; // input from termal sensor in iron
 
 // air control
 // zero cross detector pin = 2
-int const pinPwmAir = 3; // pwm to tirac
-int const pinPwmAirFan = 5;
-int const pinTempAir = A1; // input from termal sensor in iron
+const int pinPwmAir = 3; // pwm to tirac
+const int pinPwmAirFan = 5;
+const int pinTempAir = A1; // input from termal sensor in iron
 
 // control buttons
-int const ironPowerToggle = 10;
-int const airPowerToggle = 11;
+const int ironPowerToggle = 10;
+const int airPowerToggle = 11;
 
 // -------- LiquidCrystal 16x2 LCD display. --------
 /* The circuit:
@@ -40,26 +40,26 @@ int const airPowerToggle = 11;
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(4, 7, 8, 12, 13, 19);
 
-int const lcdRefreshTime = 250;
+const int lcdRefreshTime = 250;
 
 // -----------------------------------------------
 // -----------------------------------------------
 
 // iron temp control 
 int ironTempSet = 200; //default set temp
-int const ironTempMin = 200; //minimum temp
-int const  ironTempMax = 280; //max temp
+const int ironTempMin = 200; //minimum temp
+const int  ironTempMax = 280; //max temp
 int ironTempReal = 230; //val termal sensor var
-int const ironTempPwmMin = 45; //minimal value PWM
-int const ironTempPwmHalf = 99; //half value PWM
-int const ironTempPwmMax = 230; //maximum value PWM
+const int ironTempPwmMin = 45; //minimal value PWM
+const int ironTempPwmHalf = 99; //half value PWM
+const int ironTempPwmMax = 230; //maximum value PWM
 int ironTempPwmReal = 0; //current PWM value
 
 // Iron Calibration
-int const minIronTempValue = 25;  // room temperature
-int const maxIronTempValue = 400; // max heater temperature
-int const minIronAnalogValue = 0; // sensor value in room temperature
-int const maxIronAnalogValue = 764; // sensor value on max heater temperature
+const int minIronTempValue = 25;  // room temperature
+const int maxIronTempValue = 400; // max heater temperature
+const int minIronAnalogValue = 0; // sensor value in room temperature
+const int maxIronAnalogValue = 764; // sensor value on max heater temperature
 
 // phisical power switch
 boolean ironPowerState = 0; // iron ON state var
@@ -69,30 +69,30 @@ boolean ironPowerState = 0; // iron ON state var
 
 // Air temp control
 int airTempSet = 200;          //default set temp
-int const airTempMin = 200;    //minimum temp
-int const airTempMax = 280;    //max temp
+const int airTempMin = 200;    //minimum temp
+const int airTempMax = 280;    //max temp
 int airTempReal = 200;         //val termal sensor var
-int const airTempPwmMin = 100; //minimal value PWM
-int const airTempPwmHalf = 64; //half value PWM
-int const airTempPwmMax = 0;   //maximum value PWM
+const int airTempPwmMin = 100; //minimal value PWM
+const int airTempPwmHalf = 64; //half value PWM
+const int airTempPwmMax = 0;   //maximum value PWM
 int airTempPwmReal = 0;        //current PWM value
 
 // Air Calibration
-int const minAirTempValue = 25;    // room temperature
-int const maxAirTempValue = 400;   // max heater temperature
-int const minAirAnalogValue = 0;   // sensor value in room temperature
-int const maxAirAnalogValue = 764; // sensor value on max heater temperature
+const int minAirTempValue = 25;    // room temperature
+const int maxAirTempValue = 400;   // max heater temperature
+const int minAirAnalogValue = 0;   // sensor value in room temperature
+const int maxAirAnalogValue = 764; // sensor value on max heater temperature
 
 // phisical power switch
 boolean airPowerState = 0; // Air ON state var
 
 // Air Fan control
 int fanSpeedSet = 50;       //default set fan speed in %
-int const fanSpeedMin = 30; // min fan speed in %
-int const fanSpeedMax = 99; // max fan speed in %
+const int fanSpeedMin = 30; // min fan speed in %
+const int fanSpeedMax = 99; // max fan speed in %
 //int fanSpeedReal = 50;      // current fan speed in %
-int const fanSpeedPwmMin = 20;  // min PWM value
-int const fanSpeedPwmMax = 255; // max PWM value
+const int fanSpeedPwmMin = 20;  // min PWM value
+const int fanSpeedPwmMax = 255; // max PWM value
 int fanSpeedPwmReal = 0; // current PWM value
 
 // colling state
