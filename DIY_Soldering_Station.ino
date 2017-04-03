@@ -104,6 +104,9 @@ boolean airCooldownState = 0; // air gun cooling down
 int incrementIron = 000; //start value of iron sensor
 int incrementAir = 000; //start value of air sensor
 
+//  Buzzer pin
+const int buzzerPin = 3;
+
 // -------- make some custom characters 5x8 pix:
 byte degree[8] = {
   0b11100,
@@ -245,9 +248,20 @@ void setup() {
   lcd.write(byte(3));
   lcd.setCursor(15, 1);
   lcd.write(byte(4));
-  delay(2000);
+
+  // play tone
+  tone(buzzerPin, 900, 150);
+  delay(150);
+  tone(buzzerPin, 1000, 150);
+  delay(150);
+  tone(buzzerPin, 1100, 150);
+  delay(150);
+  noTone(buzzerPin);
+  
+  delay(1500);
   // clear display from welcome message
   lcd.clear();
+
   //---------------------- LCD --------------
 
   // initialize all the readings iron temp to 0:
