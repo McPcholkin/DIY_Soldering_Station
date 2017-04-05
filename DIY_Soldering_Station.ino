@@ -275,7 +275,7 @@ void loop() {
 #ifdef DEBUG
 // ------------- debug  --------------------//
 sensorVariable = analogRead(pinTempIron); //get iron sensor data
-sensorVariable = analogRead(pinTempAir); //get iron sensor data
+//sensorVariable = analogRead(pinTempAir); //get iron sensor data
 //int potVariable = analogRead(A1);    //get pot data
 //pwmControl=map(potVariable,0,1023,0,255); // map pot 0-1023 as 0-255
 
@@ -421,6 +421,7 @@ else
     airCooldownState = 1;        // cooldown started
   }
 }
+
 
 //----------------------------------------------------------------------------------------------------
 
