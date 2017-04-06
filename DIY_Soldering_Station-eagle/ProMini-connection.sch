@@ -6,7 +6,7 @@
 <setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="yes" altdistance="0.01" altunitdist="inch" altunit="inch"/>
+<grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="11" visible="no" active="no"/>
 <layer number="16" name="Bottom" color="1" fill="1" visible="no" active="no"/>
@@ -10990,7 +10990,6 @@ Source: http://www2.produktinfo.conrad.com/datenblaetter/700000-724999/705152-da
 <part name="R2" library="resistor" deviceset="R-EU_" device="0207/7" value="1K"/>
 <part name="GND1" library="supply1" deviceset="GND" device=""/>
 <part name="GND2" library="supply1" deviceset="GND" device=""/>
-<part name="P+1" library="supply1" deviceset="+5V" device=""/>
 <part name="GND3" library="supply1" deviceset="GND" device=""/>
 <part name="GND4" library="supply1" deviceset="GND" device=""/>
 <part name="P+2" library="supply1" deviceset="+5V" device="" value="+24V"/>
@@ -11103,7 +11102,7 @@ Source: http://www2.produktinfo.conrad.com/datenblaetter/700000-724999/705152-da
 <text x="170.18" y="-119.38" size="1.778" layer="91">Air Grounding</text>
 <text x="0" y="27.94" size="1.778" layer="91">Iron sensor OpAmp</text>
 <text x="10.16" y="-43.18" size="1.778" layer="91">Air sensor OpAmp</text>
-<text x="76.2" y="53.34" size="1.778" layer="91">Buzzer</text>
+<text x="116.84" y="-30.48" size="1.778" layer="91">Buzzer</text>
 <text x="99.06" y="93.98" size="1.778" layer="91">24V to 5V</text>
 <text x="119.38" y="106.68" size="1.778" layer="91">Internal switch to disable </text>
 <text x="119.38" y="104.14" size="1.778" layer="91">DC-DC (used to power 5V logic over USB)</text>
@@ -11133,7 +11132,6 @@ Source: http://www2.produktinfo.conrad.com/datenblaetter/700000-724999/705152-da
 <instance part="R2" gate="G$1" x="63.5" y="27.94" rot="R90"/>
 <instance part="GND1" gate="1" x="63.5" y="20.32"/>
 <instance part="GND2" gate="1" x="53.34" y="20.32"/>
-<instance part="P+1" gate="1" x="152.4" y="81.28"/>
 <instance part="GND3" gate="1" x="40.64" y="83.82"/>
 <instance part="GND4" gate="1" x="-5.08" y="53.34"/>
 <instance part="P+2" gate="1" x="71.12" y="96.52"/>
@@ -11184,9 +11182,9 @@ Source: http://www2.produktinfo.conrad.com/datenblaetter/700000-724999/705152-da
 <instance part="GND19" gate="1" x="129.54" y="-104.14"/>
 <instance part="X2" gate="G$1" x="195.58" y="-45.72"/>
 <instance part="R16" gate="1" x="162.56" y="-12.7" rot="R270"/>
-<instance part="SP1" gate="S1" x="68.58" y="50.8"/>
-<instance part="R17" gate="G$1" x="78.74" y="43.18"/>
-<instance part="GND20" gate="1" x="55.88" y="50.8"/>
+<instance part="SP1" gate="S1" x="109.22" y="-33.02"/>
+<instance part="R17" gate="G$1" x="119.38" y="-40.64"/>
+<instance part="GND20" gate="1" x="99.06" y="-38.1"/>
 <instance part="GND21" gate="1" x="218.44" y="-30.48"/>
 <instance part="P+6" gate="1" x="218.44" y="-20.32"/>
 <instance part="GND22" gate="1" x="167.64" y="-40.64"/>
@@ -11329,10 +11327,10 @@ Source: http://www2.produktinfo.conrad.com/datenblaetter/700000-724999/705152-da
 </segment>
 <segment>
 <pinref part="SP1" gate="S1" pin="+"/>
-<wire x1="63.5" y1="50.8" x2="60.96" y2="50.8" width="0.1524" layer="91"/>
-<wire x1="60.96" y1="50.8" x2="60.96" y2="55.88" width="0.1524" layer="91"/>
-<wire x1="60.96" y1="55.88" x2="55.88" y2="55.88" width="0.1524" layer="91"/>
-<wire x1="55.88" y1="55.88" x2="55.88" y2="53.34" width="0.1524" layer="91"/>
+<wire x1="104.14" y1="-33.02" x2="101.6" y2="-33.02" width="0.1524" layer="91"/>
+<wire x1="101.6" y1="-33.02" x2="101.6" y2="-27.94" width="0.1524" layer="91"/>
+<wire x1="101.6" y1="-27.94" x2="99.06" y2="-27.94" width="0.1524" layer="91"/>
+<wire x1="99.06" y1="-27.94" x2="99.06" y2="-35.56" width="0.1524" layer="91"/>
 <pinref part="GND20" gate="1" pin="GND"/>
 </segment>
 <segment>
@@ -11405,17 +11403,12 @@ Source: http://www2.produktinfo.conrad.com/datenblaetter/700000-724999/705152-da
 <pinref part="P+3" gate="1" pin="+5V"/>
 </segment>
 <segment>
-<wire x1="144.78" y1="78.5876" x2="144.78" y2="73.66" width="0.1524" layer="91"/>
-<wire x1="144.78" y1="73.66" x2="144.78" y2="48.26" width="0.1524" layer="91"/>
+<wire x1="144.78" y1="78.5876" x2="144.78" y2="48.26" width="0.1524" layer="91"/>
 <wire x1="144.78" y1="48.26" x2="149.86" y2="48.26" width="0.1524" layer="91"/>
 <junction x="144.78" y="48.26"/>
 <wire x1="149.86" y1="48.26" x2="149.86" y2="60.96" width="0.1524" layer="91"/>
 <pinref part="P+4" gate="1" pin="+5V"/>
 <wire x1="144.78" y1="48.26" x2="142.3924" y2="48.26" width="0.1524" layer="91"/>
-<wire x1="144.78" y1="73.66" x2="152.4" y2="73.66" width="0.1524" layer="91"/>
-<junction x="144.78" y="73.66"/>
-<wire x1="152.4" y1="73.66" x2="152.4" y2="78.74" width="0.1524" layer="91"/>
-<pinref part="P+1" gate="1" pin="+5V"/>
 </segment>
 <segment>
 <pinref part="R11" gate="G$1" pin="2"/>
@@ -11634,19 +11627,19 @@ Source: http://www2.produktinfo.conrad.com/datenblaetter/700000-724999/705152-da
 <wire x1="-7.62" y1="-73.66" x2="-7.62" y2="-55.88" width="0.1524" layer="91"/>
 <wire x1="-7.62" y1="-55.88" x2="40.64" y2="-55.88" width="0.1524" layer="91"/>
 <wire x1="40.64" y1="-55.88" x2="40.64" y2="-5.08" width="0.1524" layer="91"/>
-<wire x1="40.64" y1="-5.08" x2="86.36" y2="-5.08" width="0.1524" layer="91"/>
-<wire x1="86.36" y1="-5.08" x2="86.36" y2="-2.6924" width="0.1524" layer="91"/>
+<wire x1="40.64" y1="-5.08" x2="81.28" y2="-5.08" width="0.1524" layer="91"/>
+<wire x1="81.28" y1="-5.08" x2="81.28" y2="-2.6924" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$21" class="0">
 <segment>
-<wire x1="86.36" y1="7.7724" x2="86.36" y2="32.8676" width="0.1524" layer="91"/>
+<wire x1="81.28" y1="7.7724" x2="81.28" y2="32.8676" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$23" class="0">
 <segment>
-<wire x1="86.36" y1="7.62" x2="86.36" y2="2.54" width="0.1524" layer="91" curve="-180"/>
-<wire x1="86.36" y1="2.54" x2="86.36" y2="-2.54" width="0.1524" layer="91" curve="-180"/>
+<wire x1="81.28" y1="7.62" x2="81.28" y2="2.54" width="0.1524" layer="91" curve="-180"/>
+<wire x1="81.28" y1="2.54" x2="81.28" y2="-2.54" width="0.1524" layer="91" curve="-180"/>
 </segment>
 </net>
 <net name="N$25" class="0">
@@ -11691,22 +11684,6 @@ Source: http://www2.produktinfo.conrad.com/datenblaetter/700000-724999/705152-da
 <pinref part="LED1" gate="G$1" pin="C"/>
 </segment>
 </net>
-<net name="N$22" class="0">
-<segment>
-<wire x1="-15.24" y1="-53.34" x2="38.1" y2="-53.34" width="0.1524" layer="91"/>
-<wire x1="38.1" y1="-53.34" x2="43.18" y2="-53.34" width="0.1524" layer="91" curve="-180"/>
-<wire x1="43.18" y1="-53.34" x2="45.72" y2="-53.34" width="0.1524" layer="91"/>
-<wire x1="45.72" y1="-53.34" x2="45.72" y2="-10.16" width="0.1524" layer="91"/>
-<wire x1="45.72" y1="-10.16" x2="99.06" y2="-10.16" width="0.1524" layer="91"/>
-<wire x1="99.06" y1="-10.16" x2="99.06" y2="-2.54" width="0.1524" layer="91"/>
-<wire x1="99.06" y1="2.54" x2="99.06" y2="-2.54" width="0.1524" layer="91" curve="-180"/>
-<wire x1="99.06" y1="7.62" x2="99.06" y2="2.54" width="0.1524" layer="91" curve="-180"/>
-<pinref part="U$1" gate="G$1" pin="D9"/>
-<wire x1="99.06" y1="7.62" x2="99.06" y2="27.94" width="0.1524" layer="91"/>
-<pinref part="R13" gate="G$1" pin="1"/>
-<wire x1="-15.24" y1="-53.34" x2="-15.24" y2="-99.06" width="0.1524" layer="91"/>
-</segment>
-</net>
 <net name="N$24" class="0">
 <segment>
 <pinref part="OK2" gate="-1" pin="A2"/>
@@ -11738,13 +11715,13 @@ Source: http://www2.produktinfo.conrad.com/datenblaetter/700000-724999/705152-da
 <net name="N$32" class="0">
 <segment>
 <pinref part="U$1" gate="G$1" pin="D2"/>
-<wire x1="86.36" y1="45.72" x2="99.06" y2="45.72" width="0.1524" layer="91"/>
-<wire x1="86.36" y1="38.2524" x2="86.36" y2="45.72" width="0.1524" layer="91"/>
+<wire x1="81.28" y1="45.72" x2="99.06" y2="45.72" width="0.1524" layer="91"/>
+<wire x1="81.28" y1="38.2524" x2="81.28" y2="45.72" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$30" class="0">
 <segment>
-<wire x1="86.36" y1="38.1" x2="86.36" y2="33.02" width="0.1524" layer="91" curve="-180"/>
+<wire x1="81.28" y1="38.1" x2="81.28" y2="33.02" width="0.1524" layer="91" curve="-180"/>
 </segment>
 </net>
 <net name="N$33" class="0">
@@ -11799,15 +11776,7 @@ Source: http://www2.produktinfo.conrad.com/datenblaetter/700000-724999/705152-da
 <segment>
 <pinref part="R17" gate="G$1" pin="1"/>
 <pinref part="SP1" gate="S1" pin="-"/>
-<wire x1="73.66" y1="50.8" x2="73.66" y2="43.18" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$40" class="0">
-<segment>
-<pinref part="U$1" gate="G$1" pin="D3"/>
-<wire x1="88.9" y1="43.18" x2="99.06" y2="43.18" width="0.1524" layer="91"/>
-<pinref part="R17" gate="G$1" pin="2"/>
-<wire x1="88.9" y1="43.18" x2="83.82" y2="43.18" width="0.1524" layer="91" curve="-180"/>
+<wire x1="114.3" y1="-33.02" x2="114.3" y2="-40.64" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$41" class="0">
@@ -11907,13 +11876,6 @@ Source: http://www2.produktinfo.conrad.com/datenblaetter/700000-724999/705152-da
 </net>
 <net name="N$50" class="0">
 <segment>
-<pinref part="U$1" gate="G$1" pin="A2"/>
-<wire x1="137.16" y1="43.18" x2="152.4" y2="43.18" width="0.1524" layer="91"/>
-<wire x1="157.48" y1="43.18" x2="152.4" y2="43.18" width="0.1524" layer="91" curve="-180"/>
-<wire x1="157.48" y1="43.18" x2="165.1" y2="43.18" width="0.1524" layer="91"/>
-<wire x1="165.1" y1="43.18" x2="165.1" y2="48.26" width="0.1524" layer="91"/>
-<wire x1="165.1" y1="53.34" x2="165.1" y2="48.26" width="0.1524" layer="91" curve="-180"/>
-<wire x1="165.1" y1="53.34" x2="165.1" y2="71.12" width="0.1524" layer="91"/>
 <wire x1="165.1" y1="71.12" x2="175.26" y2="71.12" width="0.1524" layer="91"/>
 <pinref part="R20" gate="G$1" pin="2"/>
 <wire x1="175.26" y1="71.12" x2="180.34" y2="71.12" width="0.1524" layer="91"/>
@@ -11934,6 +11896,16 @@ Source: http://www2.produktinfo.conrad.com/datenblaetter/700000-724999/705152-da
 <junction x="190.5" y="71.12"/>
 <wire x1="180.34" y1="76.2" x2="180.34" y2="71.12" width="0.1524" layer="91"/>
 <junction x="180.34" y="71.12"/>
+<wire x1="165.1" y1="71.12" x2="165.1" y2="76.2" width="0.1524" layer="91"/>
+<wire x1="165.1" y1="76.2" x2="147.32" y2="76.2" width="0.1524" layer="91"/>
+<wire x1="142.24" y1="76.2" x2="127" y2="76.2" width="0.1524" layer="91"/>
+<wire x1="127" y1="76.2" x2="127" y2="73.66" width="0.1524" layer="91"/>
+<wire x1="147.32" y1="76.2" x2="142.24" y2="76.2" width="0.1524" layer="91" curve="-180"/>
+<wire x1="127" y1="68.58" x2="127" y2="55.88" width="0.1524" layer="91"/>
+<wire x1="127" y1="55.88" x2="124.46" y2="55.88" width="0.1524" layer="91"/>
+<wire x1="124.46" y1="55.88" x2="124.46" y2="40.64" width="0.1524" layer="91"/>
+<wire x1="124.46" y1="40.64" x2="121.92" y2="40.64" width="0.1524" layer="91"/>
+<wire x1="127" y1="73.66" x2="127" y2="68.58" width="0.1524" layer="91" curve="-180"/>
 </segment>
 </net>
 <net name="N$51" class="0">
@@ -12022,9 +11994,9 @@ Source: http://www2.produktinfo.conrad.com/datenblaetter/700000-724999/705152-da
 </net>
 <net name="N$59" class="0">
 <segment>
-<wire x1="142.24" y1="71.12" x2="127" y2="71.12" width="0.1524" layer="91"/>
-<wire x1="127" y1="71.12" x2="127" y2="58.42" width="0.1524" layer="91"/>
-<wire x1="127" y1="58.42" x2="121.92" y2="58.42" width="0.1524" layer="91"/>
+<wire x1="142.24" y1="71.12" x2="124.46" y2="71.12" width="0.1524" layer="91"/>
+<wire x1="124.46" y1="71.12" x2="124.46" y2="58.42" width="0.1524" layer="91"/>
+<wire x1="124.46" y1="58.42" x2="121.92" y2="58.42" width="0.1524" layer="91"/>
 <wire x1="121.92" y1="58.42" x2="121.92" y2="53.34" width="0.1524" layer="91"/>
 <pinref part="X2" gate="G$1" pin="DB7"/>
 <wire x1="205.74" y1="-27.94" x2="205.74" y2="50.8" width="0.1524" layer="91"/>
@@ -12032,6 +12004,38 @@ Source: http://www2.produktinfo.conrad.com/datenblaetter/700000-724999/705152-da
 <wire x1="157.48" y1="50.8" x2="157.48" y2="71.12" width="0.1524" layer="91"/>
 <wire x1="157.48" y1="71.12" x2="147.32" y2="71.12" width="0.1524" layer="91"/>
 <wire x1="147.32" y1="71.12" x2="142.24" y2="71.12" width="0.1524" layer="91" curve="-180"/>
+</segment>
+</net>
+<net name="N$40" class="0">
+<segment>
+<wire x1="86.36" y1="38.1" x2="86.36" y2="43.18" width="0.1524" layer="91"/>
+<pinref part="U$1" gate="G$1" pin="D3"/>
+<wire x1="86.36" y1="43.18" x2="99.06" y2="43.18" width="0.1524" layer="91"/>
+<wire x1="-15.24" y1="-53.34" x2="38.1" y2="-53.34" width="0.1524" layer="91"/>
+<wire x1="38.1" y1="-53.34" x2="43.18" y2="-53.34" width="0.1524" layer="91" curve="-180"/>
+<wire x1="43.18" y1="-53.34" x2="45.72" y2="-53.34" width="0.1524" layer="91"/>
+<wire x1="45.72" y1="-53.34" x2="45.72" y2="-10.16" width="0.1524" layer="91"/>
+<wire x1="45.72" y1="-10.16" x2="86.36" y2="-10.16" width="0.1524" layer="91"/>
+<pinref part="R13" gate="G$1" pin="1"/>
+<wire x1="-15.24" y1="-53.34" x2="-15.24" y2="-99.06" width="0.1524" layer="91"/>
+<wire x1="86.36" y1="-10.16" x2="86.36" y2="-2.54" width="0.1524" layer="91"/>
+<wire x1="86.36" y1="2.54" x2="86.36" y2="-2.54" width="0.1524" layer="91" curve="-180"/>
+<wire x1="86.36" y1="7.62" x2="86.36" y2="2.54" width="0.1524" layer="91" curve="-180"/>
+<wire x1="86.36" y1="7.62" x2="86.36" y2="33.02" width="0.1524" layer="91"/>
+<wire x1="86.36" y1="38.1" x2="86.36" y2="33.02" width="0.1524" layer="91" curve="-180"/>
+</segment>
+</net>
+<net name="N$22" class="0">
+<segment>
+<pinref part="U$1" gate="G$1" pin="D9"/>
+<wire x1="99.06" y1="7.62" x2="99.06" y2="27.94" width="0.1524" layer="91"/>
+<wire x1="99.06" y1="7.62" x2="99.06" y2="2.54" width="0.1524" layer="91" curve="-180"/>
+<wire x1="99.06" y1="2.54" x2="99.06" y2="-2.54" width="0.1524" layer="91" curve="-180"/>
+<wire x1="99.06" y1="-10.16" x2="99.06" y2="-2.54" width="0.1524" layer="91"/>
+<wire x1="99.06" y1="-10.16" x2="127" y2="-10.16" width="0.1524" layer="91"/>
+<wire x1="127" y1="-10.16" x2="127" y2="-40.64" width="0.1524" layer="91"/>
+<pinref part="R17" gate="G$1" pin="2"/>
+<wire x1="127" y1="-40.64" x2="124.46" y2="-40.64" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>
