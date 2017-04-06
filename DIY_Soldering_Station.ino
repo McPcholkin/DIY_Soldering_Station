@@ -9,6 +9,7 @@
 //#define DEBUG 1
 // enable sound
 //#define SOUND 1
+#define SERIALDEBUG
  
 // ----------------  Pinout ----------------------
 // iron control
@@ -21,7 +22,7 @@ const int pinControlAir = 3; // to tirac
 const int pinControlAirFan = 5;
 const int pinTempAir = A1; // input from termal sensor in iron
 
-// control buttons
+// Power toggles
 const int ironPowerToggle = 10;
 const int airPowerToggle = 11;
 
@@ -221,7 +222,7 @@ int sensorVariable = 0; // iron sensor data
 
 void setup() {
   //debug
-  #ifdef DEBUG
+  #ifdef SERIALDEBUG
     Serial.begin(115200);
   #endif
     
@@ -333,8 +334,8 @@ show();
 
 // ------------------------------  Iron temp control  -------------------------------------------------------
 
-if ( digitalRead(ironPowerToggle == HIGH)){ // if iron "ON" switch is enabled
-  ironPowerState = 1; // chandge power state of iron to ON
+ironPowerState = digitalRead(ironPowerToggle);
+if ( ironPowerState == 1){ // if iron "ON" switch is enabled
   
   if (ironTempReal < ironTempSet ){   // Если температура паяльника ниже установленной температуры то:
     if ((ironTempSet - ironTempReal) < 16 & (ironTempSet - ironTempReal) > 6 )  // Проверяем разницу между 
@@ -374,18 +375,18 @@ if ( digitalRead(ironPowerToggle == HIGH)){ // if iron "ON" switch is enabled
                              // 400 - get 228-232 on iron when ironTempSet = 230
   incrementIron=ironTempReal; 
 }
-else
+else 
 {
   analogWrite(pinPwmIron, 0); // Disable iron heater if switch off
-  ironPowerState = 0;        // chandge iron power state to OFF
 }
 
 //----------------------------------------------------------------------------------------------------
 
 // ------------------------------  Air temp control  -------------------------------------------------------
 
-if ( digitalRead(airPowerToggle == HIGH)){ // if iron "ON" switch is enabled
-  airPowerState = 1; // chandge power state of iron to ON
+airPowerState = digitalRead(airPowerToggle);
+if ( airPowerState == 1){ // if iron "ON" switch is enabled
+  
    
   if (airTempReal < airTempSet ){   // if temp of AirGun less set temp than:
     if ((airTempSet - airTempReal) < 16 & (airTempSet - airTempReal) > 6 )  // check difference between
@@ -428,7 +429,6 @@ if ( digitalRead(airPowerToggle == HIGH)){ // if iron "ON" switch is enabled
 else
 {
   analogWrite(pinControlAir, 0); // Disable iron heater if switch off
-  airPowerState = 0;        // chandge iron power state to OFF
 
   if ( airCooldownState == 0 && incrementAir > minAirTempValue ) // if cooling not start and air temp 
   {                                                             // more room temp
@@ -695,15 +695,37 @@ void show()
  lcd.setCursor(0, 1);
  lcd.print("A:");
  lcd.setCursor(2, 1);
- lcd.print(ironTempPwmReal);
- lcd.setCursor(5, 1);
- lcd.write(byte(0));
+ if ( airPowerState == 1 && airCooldownState == 0 ) // if cooling not start - normal work
+ {
+  lcd.print(ironTempPwmReal);
+  lcd.setCursor(5, 1);
+  lcd.write(byte(0));
+ }
+ else if ( airPowerState == 0 && airCooldownState == 1 ) // if cooling start
+ {
+  lcd.print(ironTempPwmReal);
+  lcd.setCursor(5, 1);
+  lcd.write(byte(0));
+ }
+ else
+ {
+  lcd.print("OFF ");
+ }
+ 
  lcd.setCursor(6, 1);
  lcd.print(">");
  lcd.setCursor(8, 1);
- lcd.print(airTempSet);
- lcd.setCursor(11, 1);
- lcd.write(byte(0));
+    if ( airCooldownState = 1 ) //  if cooling trigered
+   {
+    lcd.print("COOL");
+   }
+   else
+   {
+    lcd.print(airTempSet);
+    lcd.setCursor(11, 1);
+    lcd.write(byte(0));
+   }
+ 
  
  // HeatGun fan speed
  lcd.setCursor(12, 1);
