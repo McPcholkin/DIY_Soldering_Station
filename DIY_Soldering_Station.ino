@@ -1,9 +1,14 @@
 /*
  * Arduino soldering station project
  * McPcholkin https://github.com/McPcholkin/DIY_Soldering_Station
+ * 
+ * Also used examples from:
+ * Doug LaRu, 
  */
 // enable debug serial output
-#define DEBUG 1
+//#define DEBUG 1
+// enable sound
+//#define SOUND 1
  
 // ----------------  Pinout ----------------------
 // iron control
@@ -12,13 +17,22 @@ const int pinTempIron = A0; // input from termal sensor in iron
 
 // air control
 // zero cross detector pin = 2
-const int pinPwmAir = 3; // pwm to tirac
-const int pinPwmAirFan = 5;
+const int pinControlAir = 3; // to tirac
+const int pinControlAirFan = 5;
 const int pinTempAir = A1; // input from termal sensor in iron
 
 // control buttons
 const int ironPowerToggle = 10;
 const int airPowerToggle = 11;
+
+//  Buzzer pin
+const int buzzerPin = 9;
+
+// Buttons
+const int BUTTON_ERROR_WINDOW = 5;  // +/- this value 
+const int BUTTON_DELAY = 210;       // delay to debounce button
+const int controlButtonsPin = A4;   // switch circuit input connected to analog pin 4
+long buttonLastChecked = 0; // variable to limit the button getting checked every cycle
 
 // -------- LiquidCrystal 16x2 LCD display. --------
 /* The circuit:
@@ -40,7 +54,7 @@ const int airPowerToggle = 11;
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(4, 7, 8, 12, 13, 19);
 
-const int lcdRefreshTime = 250;
+const int lcdRefreshTime = 250; //refresh LCD every milisec 
 
 // -----------------------------------------------
 // -----------------------------------------------
@@ -89,7 +103,7 @@ boolean airPowerState = 0; // Air ON state var
 // Air Fan control
 int fanSpeedSet = 50;       //default set fan speed in %
 const int fanSpeedMin = 30; // min fan speed in %
-const int fanSpeedMax = 99; // max fan speed in %
+const int fanSpeedMax = 100; // max fan speed in %
 //int fanSpeedReal = 50;      // current fan speed in %
 const int fanSpeedPwmMin = 20;  // min PWM value
 const int fanSpeedPwmMax = 255; // max PWM value
@@ -103,9 +117,7 @@ boolean airCooldownState = 0; // air gun cooling down
 // increment to save current temp value
 int incrementIron = 000; //start value of iron sensor
 int incrementAir = 000; //start value of air sensor
-
-//  Buzzer pin
-const int buzzerPin = 3;
+//int incrementFan = 00; //start value of Fan %
 
 // -------- make some custom characters 5x8 pix:
 byte degree[8] = {
@@ -201,11 +213,11 @@ int averageIron = 0;                // the average
 //------------------------------------------
 
 
-
+#ifdef DEBUG
 // --------------- debug --------------------
 int sensorVariable = 0; // iron sensor data
 //------------------------------------------
-
+#endif
 
 void setup() {
   //debug
@@ -214,8 +226,8 @@ void setup() {
   #endif
     
   pinMode(pinPwmIron, OUTPUT);
-  pinMode(pinPwmAir, OUTPUT);
-  pinMode(pinPwmAirFan, OUTPUT);
+  pinMode(pinControlAir, OUTPUT);
+  pinMode(pinControlAirFan, OUTPUT);
   pinMode(ironPowerToggle, INPUT);
   pinMode(airPowerToggle, INPUT);
 
@@ -223,7 +235,7 @@ void setup() {
                                     //(выводим 0 - старт с выключеным паяльником- 
                                     // пока не опредилим состояние температуры)
 
-  analogWrite(pinPwmAirFan, fanSpeedPwmReal);                          
+  analogWrite(pinControlAirFan, fanSpeedPwmReal);                          
 
   // ------------------ LCD -----------------
   // set up the LCD's number of columns and rows:
@@ -249,14 +261,16 @@ void setup() {
   lcd.setCursor(15, 1);
   lcd.write(byte(4));
 
+  #ifdef SOUND
   // play tone
-  tone(buzzerPin, 900, 150);
-  delay(150);
-  tone(buzzerPin, 1000, 150);
-  delay(150);
-  tone(buzzerPin, 1100, 150);
-  delay(150);
-  noTone(buzzerPin);
+    tone(buzzerPin, 900, 150);
+    delay(150);
+    tone(buzzerPin, 1000, 150);
+    delay(150);
+    tone(buzzerPin, 1100, 150);
+    delay(150);
+    noTone(buzzerPin);
+  #endif
   
   delay(1500);
   // clear display from welcome message
@@ -358,7 +372,7 @@ if ( digitalRead(ironPowerToggle == HIGH)){ // if iron "ON" switch is enabled
                              // нужно вычислить
                              // 0 sens is 25 on iron - 764 is 295 on iron
                              // 400 - get 228-232 on iron when ironTempSet = 230
-  incrementIron=ironTempReal; // убрать эту строчку соеденив с предидущей!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  incrementIron=ironTempReal; 
 }
 else
 {
@@ -393,13 +407,13 @@ if ( digitalRead(airPowerToggle == HIGH)){ // if iron "ON" switch is enabled
                                         // для быстрого нагрева до нужной температуры
     }
 
-  analogWrite(pinPwmAir, airTempPwmReal); // Вывод в шим порт (на транзистор) значение мощности
+  analogWrite(pinControlAir, airTempPwmReal); // Вывод в шим порт (на транзистор) значение мощности
   }
 
   else { // Иначе (если температура паяльника равняется или выше установленной) 
        airTempPwmReal = 0;  // Выключаем мощность нагрева (шим 0-255  мы делаем 0)  - 
                          // таким образом мы отключаем паяльник
-       analogWrite(pinPwmAir, airTempPwmReal); // Вывод в шим порт (на транзистор) значение 
+       analogWrite(pinControlAir, airTempPwmReal); // Вывод в шим порт (на транзистор) значение 
        }
 
   airTempReal = analogRead(pinTempAir); // считываем текущую температуру
@@ -413,7 +427,7 @@ if ( digitalRead(airPowerToggle == HIGH)){ // if iron "ON" switch is enabled
 }
 else
 {
-  analogWrite(pinPwmAir, 0); // Disable iron heater if switch off
+  analogWrite(pinControlAir, 0); // Disable iron heater if switch off
   airPowerState = 0;        // chandge iron power state to OFF
 
   if ( airCooldownState == 0 && incrementAir > minAirTempValue ) // if cooling not start and air temp 
@@ -432,7 +446,7 @@ if ( airPowerState == 1 && airCooldownState == 0 ) // if cooling not start - nor
 {
   // get PWM value from % value
   fanSpeedPwmReal=map(fanSpeedSet, fanSpeedMin, fanSpeedMax, fanSpeedPwmMin, fanSpeedPwmMax);
-  analogWrite(pinPwmAirFan, fanSpeedPwmReal); 
+  analogWrite(pinControlAirFan, fanSpeedPwmReal); 
 }
 else if ( airPowerState == 0 ) // if air switch off
 {
@@ -440,7 +454,7 @@ else if ( airPowerState == 0 ) // if air switch off
   {
    if (incrementAir > minAirTempValue) // if air switch off and temp more than room temp
     {
-      analogWrite(pinPwmAirFan, fanSpeedPwmMax); // run fan on max speed to cooling
+      analogWrite(pinControlAirFan, fanSpeedPwmMax); // run fan on max speed to cooling
     }
     else
     { // when temp down to room temp disable cooling triger
@@ -449,67 +463,163 @@ else if ( airPowerState == 0 ) // if air switch off
   }
   else
   { // if air is off and cooling not start just off fan
-    analogWrite(pinPwmAirFan, 0);
+    analogWrite(pinControlAirFan, 0);
   }
   
 }
 //------------------------------------------------------
 
 //---------------- buttons ---------------//
-/*
-if (digitalRead(ironButtonUp) == 1) // Если нажата вниз кнопка то понизить температуру на 5
-  {
-   tempIronControl(1);
-  }
 
-if (digitalRead(ironButtonDown) == 1) // Если нажата вниз кнопка то понизить температуру на 5
-  {
-   tempIronControl(0);
-  }
-// End loop
-*/
-}
+if( buttonLastChecked == 0 ) // see if this is the first time checking the buttons
+   buttonLastChecked = millis()+BUTTON_DELAY;  // force a check this cycle
+ if( millis() - buttonLastChecked > BUTTON_DELAY ) { // make sure a reasonable delay passed
+   if( int buttNum = buttonPushed(controlButtonsPin) ) {
+     
+     #ifdef DEBUG
+     Serial.print("Button "); Serial.print(buttNum); Serial.println(" was pushed."); 
+     #endif
 
+     // ------ iron  -----------------------------
+     if (buttNum == 1) // Iron temp Down
+       {
+     if ( ironTempSet <= ironTempMin || (ironTempSet-5) <= ironTempMin )
+      {
+        ironTempSet = ironTempMin;
+        incrementIron = ironTempSet;
+      }
 
-
-//----------------- iron temp buttons control -----------------------
-void tempIronControl(int value) // debouce control iron temp
-{
- static unsigned long last_interrupt_time = 0;
- unsigned long interrupt_time = millis();
- // If interrupts come faster than 200ms, assume it's a bounce and ignore
- if (interrupt_time - last_interrupt_time > 50)
- {
-  if (value == 0) // temp Down
-    {
-    if ( ironTempSet <= ironTempMin || (ironTempSet-5) <= ironTempMin )
-    {
-      ironTempSet = ironTempMin;
-      incrementIron = ironTempSet;
-    }
-
-    else {
+     else {
           ironTempSet=ironTempSet-5;
           incrementIron = ironTempSet;
-         }
-    }
- 
-  else if (value == 1) // temp Up
-    {
-    if ( ironTempSet >= ironTempMax )
-      {
-        ironTempSet = ironTempMax;
+          }
       }
-    else {
-         ironTempSet=ironTempSet+5;
-         }
-    incrementIron = ironTempSet;
- }
- last_interrupt_time = interrupt_time;
-}
-}
-//----------------------------------------------------------------
+ 
+    else if (buttNum == 2) // Iron temp Up
+      {
+      if ( ironTempSet >= ironTempMax )
+        {
+          ironTempSet = ironTempMax;
+        }
+      else {
+          ironTempSet=ironTempSet+5;
+           }
+     incrementIron = ironTempSet;
+      }
+     //------------------------------------------
 
+     // --- air ----------------------------------
+     if (buttNum == 3) // Air temp Down
+       {
+     if ( airTempSet <= airTempMin || (airTempSet-5) <= airTempMin )
+      {
+        airTempSet = airTempMin;
+        incrementAir = airTempSet;
+      }
+
+     else {
+          airTempSet=airTempSet-5;
+          incrementAir = airTempSet;
+          }
+      }
+ 
+    else if (buttNum == 4) // Air temp Up
+      {
+      if ( airTempSet >= airTempMax )
+        {
+          airTempSet = airTempMax;
+        }
+      else {
+          airTempSet=airTempSet+5;
+           }
+     incrementAir = airTempSet;
+      }
+    //--------------------------------------------
+
+    //-------------- Fan ------------------
+     if (buttNum == 5) // Fan Speed Down
+       {
+     if ( fanSpeedSet <= fanSpeedMin || (fanSpeedSet-5) <= fanSpeedMin )
+      {
+        fanSpeedSet = fanSpeedMin;
+      }
+
+     else {
+          fanSpeedSet=fanSpeedSet-5;
+          }
+      }
+ 
+    else if (buttNum == 6) // Fan Speed Up
+      {
+      if ( fanSpeedSet >= fanSpeedMax )
+        {
+          fanSpeedSet = fanSpeedMax;
+        }
+      else {
+          fanSpeedSet=fanSpeedSet+5;
+           }
+      }
+     //------------------------------------
+   
+   }
+   buttonLastChecked = millis(); // reset the lastChecked value
+ }
+//---------------------------------------------//
+
+// end loop
+}
+
+
+//----------------------- Buttons analog values check ------------------
+int buttonPushed(int pinNum) {
+ int val = 0;         // variable to store the read value
+   val = analogRead(pinNum);   // read the input pin
+   
+   #ifdef DEBUG_ON
+     Serial.println(val);
+   #endif
+   
+
+   if( val >= (1012-BUTTON_ERROR_WINDOW) and val <= (1015+BUTTON_ERROR_WINDOW) ) {  // 1012-1015
+     #ifdef DEBUG_ON
+     Serial.println("switch 1 pressed/triggered");
+     #endif
+     return 1;
+   }
+   else if ( val >= (966-BUTTON_ERROR_WINDOW) and val <= (971+BUTTON_ERROR_WINDOW) ) { // 966-971
+     #ifdef DEBUG_ON
+     Serial.println("switch 2 pressed/triggered");
+     #endif
+     return 2;
+   }
+   else if ( val >= (883-BUTTON_ERROR_WINDOW) and val <= (886+BUTTON_ERROR_WINDOW) ) { // 883-886
+     #ifdef DEBUG_ON
+     Serial.println("switch 3 pressed/triggered");
+     #endif
+     return 3;
+   }
+   else if ( val >= (812-BUTTON_ERROR_WINDOW) and val <= (818+BUTTON_ERROR_WINDOW) ) { // 812-818
+     #ifdef DEBUG_ON
+     Serial.println("switch 4 pressed/triggered");
+     #endif
+     return 4;
+   }
+   else if( val >= (749-BUTTON_ERROR_WINDOW) and val <= (758+BUTTON_ERROR_WINDOW) )  { // 749-758
+     #ifdef DEBUG_ON
+     Serial.println("switch 5 pressed/triggered");    
+     #endif
+     return 5;
+   }
+   else if( val >= (699-BUTTON_ERROR_WINDOW) and val <= (703+BUTTON_ERROR_WINDOW) )  { // 699-703
+     #ifdef DEBUG_ON
+     Serial.println("switch 6 pressed/triggered");    
+     #endif
+     return 6;
+   }
+   else
+     return 0;  // no button found to have been pushed
+}
+// --------------------------------------------------------------------------------------
 
 
 //----------------  smooth iron -----------------
@@ -591,7 +701,7 @@ void show()
  lcd.setCursor(6, 1);
  lcd.print(">");
  lcd.setCursor(8, 1);
- lcd.print(ironTempSet);
+ lcd.print(airTempSet);
  lcd.setCursor(11, 1);
  lcd.write(byte(0));
  
@@ -601,9 +711,16 @@ void show()
  //lcd.setCursor(12, 1);
  //lcd.print("S:");
  lcd.setCursor(13, 1);
- lcd.print(fanSpeedSet);
- lcd.setCursor(15, 1);
- lcd.print("%");
+   if ( fanSpeedSet == 100 )
+   {
+    lcd.print(fanSpeedSet);
+   }
+   else 
+   {
+    lcd.print(fanSpeedSet);
+    lcd.setCursor(15, 1);
+    lcd.print("%");
+   }
 
 
 

@@ -18,7 +18,7 @@ const int ironPowerToggle = 10;
 const int airPowerToggle = 11;
 
 // Button board
-const int controllButtons = A6;
+const int controllButtons = A4;
 
 // -------- LiquidCrystal 16x2 LCD display. --------
 /* The circuit:
@@ -43,7 +43,7 @@ LiquidCrystal lcd(4, 7, 8, 12, 13, 19);
 const int lcdRefreshTime = 250;
 
 //  Buzzer pin
-const int buzzerPin = 3;
+const int buzzerPin = 9;
 
 int dimming = 128;  // Dimming level (0-128)  0 = ON, 128 = OFF
 
@@ -67,20 +67,20 @@ void setup() {
   lcd.setCursor(0, 0);
   lcd.print("Debug");
 // play tone
-  tone(buzzerPin, 900, 150);
+/*  tone(buzzerPin, 900, 150);
   delay(150);
   tone(buzzerPin, 1000, 150);
   delay(150);
   tone(buzzerPin, 1100, 150);
   delay(150);
   noTone(buzzerPin);
-  
+*/  
   delay(1500);
   // clear display from welcome message
   lcd.clear();
 
 
-  attachInterrupt(0, zero_crosss_int, RISING);  // Choose the zero cross interrupt # from the table above
+ // attachInterrupt(0, zero_crosss_int, RISING);  // Choose the zero cross interrupt # from the table above
 }
 
 
@@ -103,22 +103,22 @@ void loop() {
   // put your main code here, to run repeatedly:
 
 
-int sensorVariableIron = analogRead(pinTempIron); //get iron sensor data
-int sensorVariableAir  = analogRead(pinTempAir); 
+//int sensorVariableIron = analogRead(pinTempIron); //get iron sensor data
+//int sensorVariableAir  = analogRead(pinTempAir); 
 int sensorVariableButtons = analogRead(controllButtons);
-int ironToggleState = digitalRead(ironPowerToggle);
-int airToggleState = digitalRead(airPowerToggle);
+//int ironToggleState = digitalRead(ironPowerToggle);
+//int airToggleState = digitalRead(airPowerToggle);
 
-Serial.print("A0: ");
+/*Serial.print("A0: ");
 Serial.print(sensorVariableIron);
 Serial.print(" | ");
 Serial.print("A1: ");
 Serial.print(sensorVariableAir);
-Serial.print(" | ");
+*/Serial.print(" | ");
 Serial.print("A6: ");
 Serial.print(sensorVariableButtons);
-Serial.print(" | ");
-Serial.print("Iron ON: ");
+Serial.println(" | ");
+/*Serial.print("Iron ON: ");
 Serial.print(ironToggleState);
 Serial.print(" | ");
 Serial.print("Air ON: ");
@@ -155,7 +155,7 @@ else {
   lcd.setCursor(8, 1);
   lcd.print("AirOFF");
 }
-
+/*
 
   for (int i=5; i <= 128; i++){
     dimming=i;
@@ -170,7 +170,7 @@ for (int i=0; i<=255; i++)
   delay(100);
 }
 
-
+*/
 delay(500);
 
 
