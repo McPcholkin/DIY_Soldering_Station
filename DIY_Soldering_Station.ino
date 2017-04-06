@@ -369,10 +369,11 @@ if ( ironPowerState == 1){ // if iron "ON" switch is enabled
   ironTempReal = analogRead(pinTempIron); // считываем текущую температуру
 
   // scale heater temperature to sensor values
-  ironTempReal=map(ironTempReal, minIronAnalogValue, maxIronAnalogValue, minIronTempValue, maxIronTempValue); 
+  ironTempReal = map(ironTempReal, minIronAnalogValue, maxIronAnalogValue, minIronTempValue, maxIronTempValue); 
                              // нужно вычислить
                              // 0 sens is 25 on iron - 764 is 295 on iron
                              // 400 - get 228-232 on iron when ironTempSet = 230
+  ironTempReal = constrain(ironTempReal, minIronTempValue, maxIronTempValue); // limit iron temp                           
   incrementIron=ironTempReal; 
 }
 else 
