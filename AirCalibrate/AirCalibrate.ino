@@ -31,13 +31,15 @@ void setup() {
   Serial.begin(115200);
   #endif
   
-  D3_Out; //Настраиваем порты на выход
+  D3_Out; //Настраиваем порты на выход (pin 3)
   D3_Low; //установить на выходах низкий уровень сигнала
   D2_In;  //настраиваем порт на вход для отслеживания прохождения сигнала через ноль
 
   //CHANGE – прерывание вызывается при любом изменении значения на входе; 
   //RISING – вызов прерывания при изменении уровня напряжения с низкого (Low) на высокий(HIGH) 
   //FALLING – вызов прерывания при изменении уровня напряжения с высокого (HIGH)
+  //LOW - вызов прерывания при высоком уровне напряжения
+  //HIGH - вызов прерывания при низком уровне напряжения
   attachInterrupt(0, detect_up, LOW); // настроить срабатывание прерывания interrupt0 на pin 2 на низкий
   StartTimer1(halfcycle, 40); //время для одного разряда ШИМ
   StopTimer1(); //остановить таймер
@@ -69,11 +71,7 @@ void  detect_down()  // обработка внешнего прерывания
 
 void loop() {
 
-
-
-
-
-     
+   
 
 #ifdef CALIB
 airAnalog = analogRead(pinTempAir);
@@ -159,7 +157,6 @@ if( buttonLastChecked == 0 ) // see if this is the first time checking the butto
 
 
 #ifdef CALIB
-
 //----------------------- Buttons analog values check ------------------
 int buttonPushed(int pinNum) {
  int val = 0;         // variable to store the read value
@@ -210,8 +207,6 @@ int buttonPushed(int pinNum) {
      return 0;  // no button found to have been pushed
 }
 // --------------------------------------------------------------------------------------
-
-
 #endif
 
 
