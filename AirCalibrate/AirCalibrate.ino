@@ -1,7 +1,7 @@
 //Dimmer by alex.marinenko
 
 #include <CyberLib.h>  //attach lib Библиотека от Cyber-Place.ru
-volatile uint8_t tic, Dimmer1 = 200; //200=мин. 0=макс 
+volatile uint8_t tic, Dimmer1 = 220; //200=мин. 0=макс 
 uint8_t data;
 uint8_t dir = 1;
 
@@ -71,6 +71,7 @@ void  detect_down()  // обработка внешнего прерывания
 
 void loop() {
 
+analogWrite(fanPWMPin, fanPWM);
    
 
 #ifdef CALIB
@@ -135,9 +136,9 @@ if( buttonLastChecked == 0 ) // see if this is the first time checking the butto
  
     else if (buttNum == 4) // dimmer Up
       {
-      if ( Dimmer1 >= 200 )
+      if ( Dimmer1 >= 220 )
         {
-          Dimmer1 = 200;
+          Dimmer1 = 220;
         }
       else {
           Dimmer1=Dimmer1+5;
