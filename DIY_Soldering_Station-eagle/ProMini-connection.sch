@@ -11182,9 +11182,9 @@ Source: http://www2.produktinfo.conrad.com/datenblaetter/700000-724999/705152-da
 <instance part="GND19" gate="1" x="129.54" y="-104.14"/>
 <instance part="X2" gate="G$1" x="195.58" y="-45.72"/>
 <instance part="R16" gate="1" x="162.56" y="-12.7" rot="R270"/>
-<instance part="SP1" gate="S1" x="109.22" y="-33.02"/>
-<instance part="R17" gate="G$1" x="119.38" y="-40.64"/>
-<instance part="GND20" gate="1" x="99.06" y="-38.1"/>
+<instance part="SP1" gate="S1" x="111.76" y="-33.02"/>
+<instance part="R17" gate="G$1" x="121.92" y="-40.64"/>
+<instance part="GND20" gate="1" x="104.14" y="-40.64"/>
 <instance part="GND21" gate="1" x="218.44" y="-30.48"/>
 <instance part="P+6" gate="1" x="218.44" y="-20.32"/>
 <instance part="GND22" gate="1" x="167.64" y="-40.64"/>
@@ -11327,10 +11327,8 @@ Source: http://www2.produktinfo.conrad.com/datenblaetter/700000-724999/705152-da
 </segment>
 <segment>
 <pinref part="SP1" gate="S1" pin="+"/>
-<wire x1="104.14" y1="-33.02" x2="101.6" y2="-33.02" width="0.1524" layer="91"/>
-<wire x1="101.6" y1="-33.02" x2="101.6" y2="-27.94" width="0.1524" layer="91"/>
-<wire x1="101.6" y1="-27.94" x2="99.06" y2="-27.94" width="0.1524" layer="91"/>
-<wire x1="99.06" y1="-27.94" x2="99.06" y2="-35.56" width="0.1524" layer="91"/>
+<wire x1="106.68" y1="-33.02" x2="104.14" y2="-33.02" width="0.1524" layer="91"/>
+<wire x1="104.14" y1="-33.02" x2="104.14" y2="-38.1" width="0.1524" layer="91"/>
 <pinref part="GND20" gate="1" pin="GND"/>
 </segment>
 <segment>
@@ -11776,7 +11774,7 @@ Source: http://www2.produktinfo.conrad.com/datenblaetter/700000-724999/705152-da
 <segment>
 <pinref part="R17" gate="G$1" pin="1"/>
 <pinref part="SP1" gate="S1" pin="-"/>
-<wire x1="114.3" y1="-33.02" x2="114.3" y2="-40.64" width="0.1524" layer="91"/>
+<wire x1="116.84" y1="-33.02" x2="116.84" y2="-40.64" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$41" class="0">
@@ -12035,7 +12033,6 @@ Source: http://www2.produktinfo.conrad.com/datenblaetter/700000-724999/705152-da
 <wire x1="99.06" y1="-10.16" x2="127" y2="-10.16" width="0.1524" layer="91"/>
 <wire x1="127" y1="-10.16" x2="127" y2="-40.64" width="0.1524" layer="91"/>
 <pinref part="R17" gate="G$1" pin="2"/>
-<wire x1="127" y1="-40.64" x2="124.46" y2="-40.64" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>

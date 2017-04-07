@@ -1,15 +1,17 @@
+//Dimmer by alex.marinenko
+
+#include <CyberLib.h>  //attach lib Библиотека от Cyber-Place.ru
+volatile uint8_t tic, Dimmer1 = 200; //200=мин. 0=макс 
+uint8_t data;
+uint8_t dir = 1;
 
 int fanPWMPin = 5;
-int AirControlPin = 3;
+//int AirControlPin = 3;
 // zero detect pin 2 (timer 0)
 
 int fanPWM = 0;
-int dimmer = 255; // start dimmer value (255 - full off, 0 - full ON)
-int tic = 0;
-boolean timer = 0;
-int previousMicros = 0; //save micros
 
-//#define CALIB
+#define CALIB
 
 #ifdef CALIB
 // Buttons
@@ -29,53 +31,49 @@ void setup() {
   Serial.begin(115200);
   #endif
   
-   attachInterrupt(0, detect_up, LOW); // detect UP on zero cross
+  D3_Out; //Настраиваем порты на выход
+  D3_Low; //установить на выходах низкий уровень сигнала
+  D2_In;  //настраиваем порт на вход для отслеживания прохождения сигнала через ноль
+
+  //CHANGE – прерывание вызывается при любом изменении значения на входе; 
+  //RISING – вызов прерывания при изменении уровня напряжения с низкого (Low) на высокий(HIGH) 
+  //FALLING – вызов прерывания при изменении уровня напряжения с высокого (HIGH)
+  attachInterrupt(0, detect_up, LOW); // настроить срабатывание прерывания interrupt0 на pin 2 на низкий
+  StartTimer1(halfcycle, 40); //время для одного разряда ШИМ
+  StopTimer1(); //остановить таймер
+  
 }
 
 //********************обработчики прерываний*******************************
-
 void halfcycle()  //прерывания таймера
-{
-  tic++;  //счетчик 
-  if(dimmer < tic )
-  {
-    digitalWrite(AirControlPin, HIGH);
-  }
+{ 
+  tic++;  //счетчик  
+  if(Dimmer1 < tic ) D3_High; //управляем выходом
 }
 
 void  detect_up()  // обработка внешнего прерывания. Сработает по переднему фронту
-{ 
+{  
  tic=0;             //обнулить счетчик
- timer=true;
- //ResumeTimer1();   //запустить таймер
+ ResumeTimer1();   //запустить таймер
  attachInterrupt(0, detect_down, HIGH);  //перепрограммировать прерывание на другой обработчик
-} 
+}  
 
 void  detect_down()  // обработка внешнего прерывания. Сработает по заднему фронту
-{  
- //StopTimer1(); //остановить таймер
- timer=false;
- //D4_Low;  //логический ноль на выходы
- digitalWrite(AirControlPin, LOW);
+{   
+ StopTimer1(); //остановить таймер
+ D3_Low; //логический ноль на выходы
  tic=0;       //обнулить счетчик
  attachInterrupt(0, detect_up, LOW); //перепрограммировать прерывание на другой обработчик
-}
-//*************************************************************************
-
-
+} 
+//***********************************************************************
 
 void loop() {
 
-     if (timer==true)
-     {  
-       int currentMicros = micros();
-       if(currentMicros - previousMicros > 25) 
-       {
-        // сохраняем время последнего переключения
-        previousMicros = currentMicros;
-        halfcycle();
-       }
-    }
+
+
+
+
+     
 
 #ifdef CALIB
 airAnalog = analogRead(pinTempAir);
@@ -87,7 +85,7 @@ Serial.print("PWM: ");
 Serial.print(fanPWM);
 Serial.print(" | ");
 Serial.print("DIM: ");
-Serial.print(dimmer);
+Serial.print(Dimmer1);
 Serial.println();
 
 
@@ -127,24 +125,24 @@ if( buttonLastChecked == 0 ) // see if this is the first time checking the butto
      // ------ dimmer  -----------------------------
      if (buttNum == 3) // dimmer Down
        {
-     if ( dimmer <= 0 || (dimmer-5) <= 0 )
+     if ( Dimmer1 <= 0 || (Dimmer1-5) <= 0 )
       {
-        dimmer = 0;
+        Dimmer1 = 0;
       }
 
      else {
-          dimmer=dimmer-5;
+          Dimmer1=Dimmer1-5;
           }
       }
  
     else if (buttNum == 4) // dimmer Up
       {
-      if ( dimmer >= 255 )
+      if ( Dimmer1 >= 200 )
         {
-          dimmer = 255;
+          Dimmer1 = 200;
         }
       else {
-          dimmer=dimmer+5;
+          Dimmer1=Dimmer1+5;
            }
       }
      //------------------------------------------
