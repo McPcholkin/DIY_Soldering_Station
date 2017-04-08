@@ -5,11 +5,14 @@
  * Also used examples from:
  * Doug LaRu, alex.marinenko, David A. Mellis, Paul Stoffregen, Scott Fitzgerald, Arturo Guadalupi
  */
-// enable debug serial output
-#define DEBUG 1
+// enable debug serial output 
+//#define DEBUGIRON
+#define DEBUGAIR
+#define SERIALDEBUG
+
 // enable sound
 #define SOUND 1
-#define SERIALDEBUG
+
  
 // ----------------  Pinout ----------------------
 // iron control
@@ -19,7 +22,7 @@ const int pinTempIron = A0; // input from termal sensor in iron
 // air control
 // zero cross detector pin = 2
 const int pinControlAir = 3; // to tirac
-const int pinControlAirFan = 5;
+const int pinControlAirFan = 5; // pwm to fan
 const int pinTempAir = A1; // input from termal sensor in iron
 
 // Power toggles
@@ -60,7 +63,7 @@ const int lcdRefreshTime = 250; //refresh LCD every milisec
 // -----------------------------------------------
 // -----------------------------------------------
 
-// iron temp control 
+//--------------- iron temp control ------------------------------------
 int ironTempSet = 230;          //default set temp
 const int ironTempMin = 200;    //minimum temp
 const int  ironTempMax = 310;   //max temp
@@ -69,7 +72,6 @@ int ironTempRealC = 0;          //val termal sensor in celsius
 const int ironTempPwmMin = 50;  //minimal value PWM
 const int ironTempPwmHalf = 125; //half value PWM
 const int ironTempPwmMax = 220; //maximum value PWM
-//const int ironTempPwmFastHeat = 220; // value PWM for fast heating
 int ironTempPwmReal = 0;        //current PWM value
 
 // Iron Calibration (may need some tweking)
@@ -82,40 +84,41 @@ const int maxIronAnalogValue = 640; // sensor value on max heater temperature
 boolean ironPowerState = 0; // iron ON state var
 // disconnected detection
 boolean ironDisconnected = 0;
-
-// int tempError = -50; // difference temp (set to real)  -- not used?
-// int tempDiff = 0; //variable to diff temp (set to current) -- not used?
+//-------------------------------------------------------------------------
 
 // Air temp control
 int airTempSet = 200;          //default set temp
 const int airTempMin = 200;    //minimum temp
-const int airTempMax = 280;    //max temp
-int airTempReal = 200;         //val termal sensor var
-const int airTempPwmMin = 100; //minimal value PWM
-const int airTempPwmHalf = 64; //half value PWM
-const int airTempPwmMax = 0;   //maximum value PWM
-int airTempPwmReal = 0;        //current PWM value
+const int airTempMax = 580;    //max temp
+int airTempReal = 0;         //val termal sensor var
+int airTempRealC = 0;         // termal sensor var in celsius
+//const int airTempPwmMin = 100; //minimal value PWM
+//const int airTempPwmHalf = 64; //half value PWM
+//const int airTempPwmMax = 0;   //maximum value PWM
+int airTempDimmer = 0;        //current dimmer value
 
 // Air Calibration
-const int minAirTempValue = 25;    // room temperature
-const int maxAirTempValue = 400;   // max heater temperature
-const int minAirAnalogValue = 0;   // sensor value in room temperature
-const int maxAirAnalogValue = 764; // sensor value on max heater temperature
+const int minAirTempValue = 40;    // room temperature
+const int maxAirTempValue = 580;   // max heater temperature
+const int minAirAnalogValue = 5;   // sensor value in room temperature
+const int maxAirAnalogValue = 702; // sensor value on max heater temperature
 
 // phisical power switch
 boolean airPowerState = 0; // Air ON state var
 
-// Air Fan control
+// -------------  Air Fan control  ----------------------
 int fanSpeedSet = 50;       //default set fan speed in %
 const int fanSpeedMin = 30; // min fan speed in %
 const int fanSpeedMax = 100; // max fan speed in %
 //int fanSpeedReal = 50;      // current fan speed in %
-const int fanSpeedPwmMin = 20;  // min PWM value
-const int fanSpeedPwmMax = 255; // max PWM value
+const int fanSpeedPwmMin = 40;  // min PWM value
+const int fanSpeedPwmMax = 240; // max PWM value
 int fanSpeedPwmReal = 0; // current PWM value
 
 // colling state
 boolean airCooldownState = 0; // air gun cooling down 
+//------------------------------------------------------
+
 //unsigned long airCooldownStartTime; // air gun cooling start time
 //unsigned long const airCooldownTime = 90000; // 90 sec to cool heater
 
@@ -226,11 +229,6 @@ const long intervalBeep = 1000;           // interval at which to Beep (millisec
 
 //--------------------------
 
-#ifdef DEBUG
-// --------------- debug --------------------
-int sensorVariable = 0; // iron sensor data
-//------------------------------------------
-#endif
 
 void setup() {
   //debug
@@ -299,24 +297,39 @@ void setup() {
 }
 
 void loop() {
-#ifdef DEBUG
+
 // ------------- debug  --------------------//
-sensorVariable = analogRead(pinTempIron); //get iron sensor data
-//sensorVariable = analogRead(pinTempAir); //get iron sensor data
-//int potVariable = analogRead(A1);    //get pot data
-//pwmControl=map(potVariable,0,1023,0,255); // map pot 0-1023 as 0-255
+#ifdef SERIALDEBUG
+//int sensorVariable = analogRead(pinTempAir); //get air sensor data
 
-//int buttonUpState=digitalRead(ironButtonUp);    //get buttons state
-//int buttonDownState=digitalRead(ironButtonDown);
+Serial.print("Fan %: ");
+Serial.print(fanSpeedSet);
+Serial.print(" | ");
+Serial.print("Fan PWM: ");
+Serial.print(fanSpeedPwmReal);
+Serial.print(" | ");
+Serial.print("Air On: ");
+Serial.print(airPowerState);
+Serial.print(" | ");
+Serial.print("Air Cool: ");
+Serial.print(airCooldownState);
+Serial.print(" | ");
+Serial.print("Sensor Air: ");
+Serial.print(airTempReal);
+Serial.print(" | ");
+Serial.print("Set Air: ");
+Serial.print(airTempSet);
+Serial.print(" | ");
+Serial.print("Real Air: ");
+Serial.print(airTempRealC);
+Serial.println("");
+#endif
 
-// Debug output
-//Serial.print("PWM Pot: ");
-//Serial.print(pwmControl);
-//Serial.print("Inc Iron: ");
-//Serial.print(incrementIron);
-//Serial.print(" | ");
+#ifdef DEBUGIRON
+//int sensorVariable = analogRead(pinTempIron); //get iron sensor data
+
 Serial.print("Sensor Iron: ");
-Serial.print(sensorVariable);
+Serial.print(ironTempReal);
 Serial.print(" | ");
 Serial.print("Set Iron: ");
 Serial.print(ironTempSet);
@@ -329,17 +342,10 @@ Serial.print(ironTempRealC);
 Serial.print(" | ");
 Serial.print("Iron PWM: ");
 Serial.print(ironTempPwmReal);
-//Serial.println("");
-//Serial.print("Inc Air: ");
-//Serial.print(incrementAir);
-//Serial.print(" | ");
-
 Serial.println("");
-//delay(100);
-// set pwm value
-//analogWrite(pinPwmIron, pwmControl);
-// ------------- debug end --------------------//
 #endif
+// ------------- debug end --------------------//
+
 
 // ---------------------  Main code --------------
 
@@ -349,11 +355,14 @@ smoothIron();
 // refresh LCD screen
 show();   
 
-// read temp 
+// read iron temp 
 GetIronTemp();
 
 // alert when iron is diconnected
 IronAlert();
+
+// read air temp
+GetAirTemp();
 
 // ------------------------------------------------
 
@@ -403,8 +412,7 @@ else
 
 airPowerState = digitalRead(airPowerToggle);
 if ( airPowerState == 1){ // if iron "ON" switch is enabled
-  
-   
+   /*
   if (airTempReal < airTempSet ){   // if temp of AirGun less set temp than:
     if ((airTempSet - airTempReal) < 16 & (airTempSet - airTempReal) > 6 )  // check difference between
                                                          // set air temp and current temp,
@@ -442,15 +450,17 @@ if ( airPowerState == 1){ // if iron "ON" switch is enabled
                              // 0 sens is 25 on iron - 764 is 295 on iron
                              // 400 - get 228-232 on iron when ironTempSet = 230
   incrementAir=airTempReal;
+  */
 }
 else
 {
-  analogWrite(pinControlAir, 0); // Disable iron heater if switch off
-
+  //analogWrite(pinControlAir, 0); // Disable iron heater if switch off
+/*
   if ( airCooldownState == 0 && incrementAir > minAirTempValue ) // if cooling not start and air temp 
   {                                                             // more room temp
     airCooldownState = 1;        // cooldown started
   }
+  */
 }
 
 
@@ -467,9 +477,9 @@ if ( airPowerState == 1 && airCooldownState == 0 ) // if cooling not start - nor
 }
 else if ( airPowerState == 0 ) // if air switch off
 {
-  if ( airCooldownState = 1 ) //  if cooling trigered
+  if ( airCooldownState == 1 ) //  if cooling trigered
   {
-   if (incrementAir > minAirTempValue) // if air switch off and temp more than room temp
+   if ( airTempRealC > minAirTempValue+5) // if air switch off and temp more than room temp
     {
       analogWrite(pinControlAirFan, fanSpeedPwmMax); // run fan on max speed to cooling
     }
@@ -775,7 +785,7 @@ void show()
  lcd.setCursor(6, 1);
  lcd.print(">");
  lcd.setCursor(8, 1);
-    if ( airCooldownState = 1 ) //  if cooling trigered
+    if ( airCooldownState == 1 ) //  if cooling trigered
    {
     lcd.print("COOL");
    }
@@ -810,12 +820,21 @@ void show()
 }
 }
 
-void GetIronTemp()
+void GetIronTemp()  // get iron temp in celsius
 {
  ironTempReal = analogRead(pinTempIron); // считываем текущую температуру
  // scale heater temperature to sensor values
  ironTempRealC = map(ironTempReal, minIronAnalogValue, maxIronAnalogValue, minIronTempValue, maxIronTempValue);
  ironTempRealC = constrain(ironTempRealC, minIronTempValue, maxIronTempValue); // limit iron temp    
+}
+
+void GetAirTemp()  // get air temp in celsius
+{
+ airTempReal = analogRead(pinTempAir); // считываем текущую температуру
+ // scale heater temperature to sensor values
+ airTempRealC = map(airTempReal, minAirAnalogValue, maxAirAnalogValue, minAirTempValue, maxAirTempValue);
+ airTempRealC = constrain(airTempRealC, minAirTempValue, maxAirTempValue); // limit air temp    
+
 }
 
 void IronAlert()
