@@ -1,7 +1,7 @@
 //Dimmer by alex.marinenko
 
 #include <CyberLib.h>  //attach lib Библиотека от Cyber-Place.ru
-volatile uint8_t tic, Dimmer1 = 220; //200=мин. 0=макс 
+volatile uint8_t tic, Dimmer1 = 220; //220=мин. 0=макс 
 uint8_t data;
 uint8_t dir = 1;
 

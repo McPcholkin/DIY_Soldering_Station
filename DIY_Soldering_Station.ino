@@ -3,12 +3,12 @@
  * McPcholkin https://github.com/McPcholkin/DIY_Soldering_Station
  * 
  * Also used examples from:
- * Doug LaRu, 
+ * Doug LaRu, alex.marinenko, 
  */
 // enable debug serial output
-//#define DEBUG 1
+#define DEBUG 1
 // enable sound
-//#define SOUND 1
+#define SOUND 1
 #define SERIALDEBUG
  
 // ----------------  Pinout ----------------------
@@ -61,20 +61,22 @@ const int lcdRefreshTime = 250; //refresh LCD every milisec
 // -----------------------------------------------
 
 // iron temp control 
-int ironTempSet = 200; //default set temp
-const int ironTempMin = 200; //minimum temp
-const int  ironTempMax = 280; //max temp
-int ironTempReal = 230; //val termal sensor var
-const int ironTempPwmMin = 45; //minimal value PWM
-const int ironTempPwmHalf = 99; //half value PWM
-const int ironTempPwmMax = 230; //maximum value PWM
-int ironTempPwmReal = 0; //current PWM value
+int ironTempSet = 230;          //default set temp
+const int ironTempMin = 200;    //minimum temp
+const int  ironTempMax = 310;   //max temp
+int ironTempReal = 0;           //val termal sensor analog
+int ironTempRealC = 0;          //val termal sensor in celsius
+const int ironTempPwmMin = 50;  //minimal value PWM
+const int ironTempPwmHalf = 125; //half value PWM
+const int ironTempPwmMax = 220; //maximum value PWM
+//const int ironTempPwmFastHeat = 220; // value PWM for fast heating
+int ironTempPwmReal = 0;        //current PWM value
 
-// Iron Calibration
-const int minIronTempValue = 25;  // room temperature
-const int maxIronTempValue = 400; // max heater temperature
-const int minIronAnalogValue = 0; // sensor value in room temperature
-const int maxIronAnalogValue = 764; // sensor value on max heater temperature
+// Iron Calibration (may need some tweking)
+const int minIronTempValue = 20;  // min temperature in celsius
+const int maxIronTempValue = 330; // max heater temperature
+const int minIronAnalogValue = 5; // sensor value in room temperature
+const int maxIronAnalogValue = 640; // sensor value on max heater temperature
 
 // phisical power switch
 boolean ironPowerState = 0; // iron ON state var
@@ -116,7 +118,7 @@ boolean airCooldownState = 0; // air gun cooling down
 //unsigned long const airCooldownTime = 90000; // 90 sec to cool heater
 
 // increment to save current temp value
-int incrementIron = 000; //start value of iron sensor
+//int incrementIron = 000; //start value of iron sensor
 int incrementAir = 000; //start value of air sensor
 //int incrementFan = 00; //start value of Fan %
 
@@ -207,10 +209,11 @@ byte linesFull[8] = {
 //---------- analog smoothing Iron -----------------
 const int numReadingsIron = 100;
 
-int readingsIron[numReadingsIron];      // the readings from the analog input
+int readingsIron[numReadingsIron];  // the readings from the analog input
 int readIndexIron = 0;              // the index of the current reading
 int totalIron = 0;                  // the running total
-int averageIron = 0;                // the average
+int averageIronTemp = 0;            // the average
+int averageIronTempPretty = 0;      //  just pretty value to display
 //------------------------------------------
 
 
@@ -300,9 +303,9 @@ sensorVariable = analogRead(pinTempIron); //get iron sensor data
 // Debug output
 //Serial.print("PWM Pot: ");
 //Serial.print(pwmControl);
-Serial.print("Inc Iron: ");
-Serial.print(incrementIron);
-Serial.print(" | ");
+//Serial.print("Inc Iron: ");
+//Serial.print(incrementIron);
+//Serial.print(" | ");
 Serial.print("Sensor Iron: ");
 Serial.print(sensorVariable);
 Serial.print(" | ");
@@ -311,9 +314,15 @@ Serial.print(ironTempSet);
 Serial.print(" | ");
 Serial.print("Iron On: ");
 Serial.print(ironPowerState);
-Serial.println("");
-Serial.print("Inc Air: ");
-Serial.print(incrementAir);
+Serial.print(" | ");
+Serial.print("Iron real: ");
+Serial.print(ironTempRealC);
+Serial.print(" | ");
+Serial.print("Iron PWM: ");
+Serial.print(ironTempPwmReal);
+//Serial.println("");
+//Serial.print("Inc Air: ");
+//Serial.print(incrementAir);
 //Serial.print(" | ");
 
 Serial.println("");
@@ -323,7 +332,7 @@ Serial.println("");
 // ------------- debug end --------------------//
 #endif
 
-// ---------------------  Main code --------------------------------------------------------------
+// ---------------------  Main code --------------
 
 // smooth iron meshure values
 smoothIron();
@@ -331,14 +340,18 @@ smoothIron();
 // refresh LCD screen
 show();   
 
+// read temp 
+GetIronTemp();
+
+// ------------------------------------------------
 
 // ------------------------------  Iron temp control  -------------------------------------------------------
 
 ironPowerState = digitalRead(ironPowerToggle);
 if ( ironPowerState == 1){ // if iron "ON" switch is enabled
   
-  if (ironTempReal < ironTempSet ){   // Если температура паяльника ниже установленной температуры то:
-    if ((ironTempSet - ironTempReal) < 16 & (ironTempSet - ironTempReal) > 6 )  // Проверяем разницу между 
+  if (ironTempRealC < ironTempSet ){   // Если температура паяльника ниже установленной температуры то:
+    if ((ironTempSet - ironTempRealC) < 16 & (ironTempSet - ironTempRealC) > 6 )  // Проверяем разницу между 
                                                          // установленной температурой и текущей паяльника,
                                                          // Если разница меньше 10 градусов то 
       {
@@ -346,7 +359,7 @@ if ( ironPowerState == 1){ // if iron "ON" switch is enabled
                                            // таким образом мы убираем инерцию перегрева
       }
 
-  else if ((ironTempSet - ironTempReal) < 4 ) // if difference less 4 degree use min temp
+  else if ((ironTempSet - ironTempRealC) < 4 ) // if difference less 4 degree use min temp
     {
       ironTempPwmReal = ironTempPwmMin; 
     }
@@ -356,25 +369,16 @@ if ( ironPowerState == 1){ // if iron "ON" switch is enabled
       ironTempPwmReal = ironTempPwmMax; // Иначе Подымаем мощность нагрева(шим 0-255  мы делаем 230) на максимум 
                                         // для быстрого нагрева до нужной температуры
     }
-
-  analogWrite(pinPwmIron, ironTempPwmReal); // Вывод в шим порт (на транзистор) значение мощности
   }
 
   else { // Иначе (если температура паяльника равняется или выше установленной) 
        ironTempPwmReal = 0;  // Выключаем мощность нагрева (шим 0-255  мы делаем 0)  - 
                          // таким образом мы отключаем паяльник
-       analogWrite(pinPwmIron, ironTempPwmReal); // Вывод в шим порт (на транзистор) значение 
        }
 
-  ironTempReal = analogRead(pinTempIron); // считываем текущую температуру
+ 
 
-  // scale heater temperature to sensor values
-  ironTempReal = map(ironTempReal, minIronAnalogValue, maxIronAnalogValue, minIronTempValue, maxIronTempValue); 
-                             // нужно вычислить
-                             // 0 sens is 25 on iron - 764 is 295 on iron
-                             // 400 - get 228-232 on iron when ironTempSet = 230
-  ironTempReal = constrain(ironTempReal, minIronTempValue, maxIronTempValue); // limit iron temp                           
-  incrementIron=ironTempReal; 
+  analogWrite(pinPwmIron, ironTempPwmReal); // Вывод в шим порт (на транзистор) значение 
 }
 else 
 {
@@ -487,12 +491,12 @@ if( buttonLastChecked == 0 ) // see if this is the first time checking the butto
      if ( ironTempSet <= ironTempMin || (ironTempSet-5) <= ironTempMin )
       {
         ironTempSet = ironTempMin;
-        incrementIron = ironTempSet;
+     //   incrementIron = ironTempSet;
       }
 
      else {
           ironTempSet=ironTempSet-5;
-          incrementIron = ironTempSet;
+        //  incrementIron = ironTempSet;
           }
       }
  
@@ -505,7 +509,7 @@ if( buttonLastChecked == 0 ) // see if this is the first time checking the butto
       else {
           ironTempSet=ironTempSet+5;
            }
-     incrementIron = ironTempSet;
+//     incrementIron = ironTempSet;
       }
      //------------------------------------------
 
@@ -624,13 +628,12 @@ int buttonPushed(int pinNum) {
 
 
 //----------------  smooth iron -----------------
-
 void smoothIron()
 {
   // subtract the last reading:
   totalIron = totalIron - readingsIron[readIndexIron];
   // read from the sensor:
-  readingsIron[readIndexIron] = incrementIron; // bouncing value !
+  readingsIron[readIndexIron] = ironTempRealC; // bouncing value !
   // add the reading to the total:
   totalIron = totalIron + readingsIron[readIndexIron];
   // advance to the next position in the array:
@@ -641,12 +644,10 @@ void smoothIron()
     // ...wrap around to the beginning:
     readIndexIron = 0;
   }
-
   // calculate the average:
-  averageIron = totalIron / numReadingsIron;
-
+  averageIronTemp = totalIron / numReadingsIron;
+  averageIronTempPretty = averageIronTemp+3; // to get more pretty value (230 when avarage 227) just for perfect 
 }
-
 //------------------------------------------------------------------  
 
 // ----------------------------------  LCD ------------------------
@@ -661,9 +662,17 @@ void show()
   {
    // iron temp when iron is ON
    lcd.setCursor(0, 0);
-   lcd.print("I:");
-   lcd.setCursor(2, 0);
-   lcd.print(averageIron);
+   if (averageIronTempPretty <= 99) // if temp is two digit value
+   {
+    lcd.print("I: ");
+    lcd.setCursor(3, 0);
+   }
+   else
+   {
+    lcd.print("I:");
+    lcd.setCursor(2, 0);
+   }
+   lcd.print(averageIronTempPretty);
    lcd.setCursor(5, 0);
    lcd.write(byte(0));
    lcd.setCursor(6, 0);
@@ -673,21 +682,45 @@ void show()
    lcd.setCursor(11, 0);
    lcd.write(byte(0));
   }
-  else // iron is off
-  {
+  else if ( ironPowerState == 0 && (averageIronTemp - minIronTempValue) > 10)  // iron is off and temp more than
+  {                                                                            // min temp, iron is cooling
    lcd.setCursor(0, 0);
-   lcd.print("I:");
-   lcd.setCursor(2, 0);
-   lcd.print("OFF");
+   if (averageIronTemp <= 99) // if temp is two digit value
+   {
+    lcd.print("I: ");
+    lcd.setCursor(3, 0);
+   }
+   else
+   {
+    lcd.print("I:");
+    lcd.setCursor(2, 0);
+   }
+   lcd.print(averageIronTempPretty);
    lcd.setCursor(5, 0);
-   lcd.write(" ");
+   lcd.write(byte(0));
    lcd.setCursor(6, 0);
    lcd.print(">");
    lcd.setCursor(8, 0);
-   lcd.print(ironTempSet);
-   lcd.setCursor(11, 0);
-   lcd.write(byte(0));
+   lcd.print("COOL");
   }
+  else
+  {
+    lcd.setCursor(0, 0);
+    lcd.print("I:");
+    lcd.setCursor(2, 0);
+    lcd.print("OFF");
+    lcd.setCursor(5, 0);
+    lcd.write(" ");
+    lcd.setCursor(6, 0);
+    lcd.print(">");
+    lcd.setCursor(8, 0);
+    lcd.print(ironTempSet);
+    lcd.setCursor(11, 0);
+    lcd.write(byte(0));
+  }
+
+    
+   
  // iron state
  lcd.setCursor(13, 0);
  lcd.print("SLP");
@@ -751,4 +784,10 @@ void show()
 }
 }
 
-
+void GetIronTemp()
+{
+ ironTempReal = analogRead(pinTempIron); // считываем текущую температуру
+ // scale heater temperature to sensor values
+ ironTempRealC = map(ironTempReal, minIronAnalogValue, maxIronAnalogValue, minIronTempValue, maxIronTempValue);
+ ironTempRealC = constrain(ironTempRealC, minIronTempValue, maxIronTempValue); // limit iron temp    
+}
