@@ -7,8 +7,8 @@
  */
 // enable debug serial output 
 //#define DEBUGIRON
-#define DEBUGAIR
-#define SERIALDEBUG
+//#define DEBUGAIR
+//#define SERIALDEBUG
 
 // enable sound
 #define SOUND 1
@@ -220,7 +220,7 @@ int averageIronTempPretty = 0;      //  just pretty value to display
 //------------------------------------------
 
 //---------- analog smoothing Air -----------------
-const int numReadingsAir = 100;
+const int numReadingsAir = 30;
 
 int readingsAir[numReadingsAir];  // the readings from the analog input
 int readIndexAir = 0;              // the index of the current reading
@@ -291,7 +291,7 @@ void setup() {
   lcd.setCursor(0, 0);
   lcd.print("Soldering");
   lcd.setCursor(0, 1);
-  lcd.print("Station FW:0.3");
+  lcd.print("Station FW:0.4");
   lcd.setCursor(15, 0);
   lcd.write(byte(3));
   lcd.setCursor(15, 1);
@@ -383,8 +383,8 @@ Serial.print(" | ");
 Serial.print("Dsc: ");
 Serial.print(airDisconnected);
 Serial.print(" | ");
-Serial.print("Dsc2: ");
-Serial.print(ironDisconnected);
+Serial.print("Pretty: ");
+Serial.print(averageAirTempPretty);
 Serial.println("");
 #endif
 
