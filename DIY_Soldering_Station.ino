@@ -3,7 +3,7 @@
  * McPcholkin https://github.com/McPcholkin/DIY_Soldering_Station
  * 
  * Also used examples from:
- * Doug LaRu, alex.marinenko, 
+ * Doug LaRu, alex.marinenko, David A. Mellis, Paul Stoffregen, Scott Fitzgerald, Arturo Guadalupi
  */
 // enable debug serial output
 #define DEBUG 1
@@ -80,6 +80,8 @@ const int maxIronAnalogValue = 640; // sensor value on max heater temperature
 
 // phisical power switch
 boolean ironPowerState = 0; // iron ON state var
+// disconnected detection
+boolean ironDisconnected = 0;
 
 // int tempError = -50; // difference temp (set to real)  -- not used?
 // int tempDiff = 0; //variable to diff temp (set to current) -- not used?
@@ -217,6 +219,13 @@ int averageIronTempPretty = 0;      //  just pretty value to display
 //------------------------------------------
 
 
+//--- beep without delay ---
+int beepState = 0; // last beep state
+unsigned long previousMillisBeep = 0;  // will store last time Beep was updated
+const long intervalBeep = 1000;           // interval at which to Beep (milliseconds)
+
+//--------------------------
+
 #ifdef DEBUG
 // --------------- debug --------------------
 int sensorVariable = 0; // iron sensor data
@@ -342,6 +351,9 @@ show();
 
 // read temp 
 GetIronTemp();
+
+// alert when iron is diconnected
+IronAlert();
 
 // ------------------------------------------------
 
@@ -658,6 +670,16 @@ void show()
  // If interrupts come faster than 200ms, assume it's a bounce and ignore
  if (lcd_refresh_time - last_lcd_refresh_time > lcdRefreshTime)
  {
+ 
+ if ( ironDisconnected == 1) // if iron disconnected
+ {
+  lcd.setCursor(0, 0);
+  lcd.print("I:");
+  lcd.setCursor(2, 0);
+  lcd.print("Disconnected");
+ }
+ else // iron connected
+ {
   if (ironPowerState == 1)
   {
    // iron temp when iron is ON
@@ -676,7 +698,7 @@ void show()
    lcd.setCursor(5, 0);
    lcd.write(byte(0));
    lcd.setCursor(6, 0);
-   lcd.print(">");
+   lcd.print("> ");
    lcd.setCursor(8, 0);
    lcd.print(ironTempSet);
    lcd.setCursor(11, 0);
@@ -699,7 +721,7 @@ void show()
    lcd.setCursor(5, 0);
    lcd.write(byte(0));
    lcd.setCursor(6, 0);
-   lcd.print(">");
+   lcd.print("> ");
    lcd.setCursor(8, 0);
    lcd.print("COOL");
   }
@@ -712,18 +734,22 @@ void show()
     lcd.setCursor(5, 0);
     lcd.write(" ");
     lcd.setCursor(6, 0);
-    lcd.print(">");
+    lcd.print("> ");
     lcd.setCursor(8, 0);
     lcd.print(ironTempSet);
     lcd.setCursor(11, 0);
     lcd.write(byte(0));
   }
 
+  lcd.setCursor(12, 0);  // hold space for "Disconnected"
+  lcd.print("    ");
+ }
     
    
  // iron state
- lcd.setCursor(13, 0);
- lcd.print("SLP");
+// lcd.setCursor(13, 0);
+
+// lcd.print("SLP");
 
  // HeatGun temp
  lcd.setCursor(0, 1);
@@ -791,3 +817,56 @@ void GetIronTemp()
  ironTempRealC = map(ironTempReal, minIronAnalogValue, maxIronAnalogValue, minIronTempValue, maxIronTempValue);
  ironTempRealC = constrain(ironTempRealC, minIronTempValue, maxIronTempValue); // limit iron temp    
 }
+
+void IronAlert()
+{
+  if ( ironTempReal >= 760 && ironPowerState == 1 ) //if iron disconnected on work
+  {
+     ironDisconnected = 1;
+     alertSound(1);
+  }
+  else if ( ironTempReal >= 760 && ironPowerState == 0 ) //if iron disconnected on off
+  {
+    ironDisconnected = 1;
+    alertSound(0);
+  }
+  else
+  {
+    ironDisconnected = 0;
+    alertSound(0);
+  }
+}
+
+void alertSound(int val)
+{
+  if ( val == 1) // enable beeper
+  {
+   unsigned long currentMillisBeep = millis(); // get current time
+
+   if (currentMillisBeep - previousMillisBeep >= intervalBeep) 
+     {
+       // save the last time you Beep
+       previousMillisBeep = currentMillisBeep;
+
+       // if the Beep is off turn it on and vice-versa:
+       if (beepState == 0) 
+        {
+         beepState = 1;
+         tone(buzzerPin, 900);
+        } 
+        else 
+        {
+        beepState = 0;
+        noTone(buzzerPin);
+        }
+     }
+   
+  }
+  
+  else if (val == 0) // disable beep
+   {
+     beepState = 0;
+     noTone(buzzerPin);
+   }
+}
+
