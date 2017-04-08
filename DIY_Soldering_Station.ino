@@ -12,7 +12,6 @@
 
 // enable sound
 #define SOUND 1
-
  
 // ----------------  Pinout ----------------------
 // iron control
@@ -21,7 +20,7 @@ const int pinTempIron = A0; // input from termal sensor in iron
 
 // air control
 // zero cross detector pin = 2
-const int pinControlAir = 3; // to tirac
+//const int pinControlAir = 3; // to tirac
 const int pinControlAirFan = 5; // pwm to fan
 const int pinTempAir = A1; // input from termal sensor in iron
 
@@ -86,16 +85,21 @@ boolean ironPowerState = 0; // iron ON state var
 boolean ironDisconnected = 0;
 //-------------------------------------------------------------------------
 
+#include <CyberLib.h>  //attach lib by Cyber-Place.ru for dimming
+volatile uint8_t tic, Dimmer1 = 230; // 220 = min/off. 0 = max 
+uint8_t data;
+uint8_t dir = 1;
+
 // Air temp control
 int airTempSet = 200;          //default set temp
 const int airTempMin = 200;    //minimum temp
 const int airTempMax = 580;    //max temp
 int airTempReal = 0;         //val termal sensor var
 int airTempRealC = 0;         // termal sensor var in celsius
-//const int airTempPwmMin = 100; //minimal value PWM
-//const int airTempPwmHalf = 64; //half value PWM
-//const int airTempPwmMax = 0;   //maximum value PWM
-int airTempDimmer = 0;        //current dimmer value
+const int airDimmerMin = 155; //minimal value PWM
+const int airDimmerHalf = 64; //half value PWM
+const int airDimmerMax = 0;   //maximum value PWM
+const int airDimmerOff = 230;   //maximum value PWM
 
 // Air Calibration
 const int minAirTempValue = 40;    // room temperature
@@ -105,6 +109,7 @@ const int maxAirAnalogValue = 702; // sensor value on max heater temperature
 
 // phisical power switch
 boolean airPowerState = 0; // Air ON state var
+// -------------------------------------------------------------------------
 
 // -------------  Air Fan control  ----------------------
 int fanSpeedSet = 50;       //default set fan speed in %
@@ -124,7 +129,7 @@ boolean airCooldownState = 0; // air gun cooling down
 
 // increment to save current temp value
 //int incrementIron = 000; //start value of iron sensor
-int incrementAir = 000; //start value of air sensor
+//int incrementAir = 000; //start value of air sensor
 //int incrementFan = 00; //start value of Fan %
 
 // -------- make some custom characters 5x8 pix:
@@ -221,12 +226,25 @@ int averageIronTemp = 0;            // the average
 int averageIronTempPretty = 0;      //  just pretty value to display
 //------------------------------------------
 
+//---------- analog smoothing Air -----------------
+const int numReadingsAir = 100;
+
+int readingsAir[numReadingsAir];  // the readings from the analog input
+int readIndexAir = 0;              // the index of the current reading
+int totalAir = 0;                  // the running total
+int averageAirTemp = 0;            // the average
+int averageAirTempPretty = 0;      //  just pretty value to display
+//------------------------------------------
 
 //--- beep without delay ---
 int beepState = 0; // last beep state
 unsigned long previousMillisBeep = 0;  // will store last time Beep was updated
 const long intervalBeep = 1000;           // interval at which to Beep (milliseconds)
+//--------------------------
 
+//--- cooldown without delay ---
+unsigned long previousMillisCooldown = 0;  // will store last time Cooldown was updated
+const long cooldownTime = 60000;           // Cooldown time  (milliseconds) (60 SEC)
 //--------------------------
 
 
@@ -237,7 +255,7 @@ void setup() {
   #endif
     
   pinMode(pinPwmIron, OUTPUT);
-  pinMode(pinControlAir, OUTPUT);
+  //pinMode(pinControlAir, OUTPUT);
   pinMode(pinControlAirFan, OUTPUT);
   pinMode(ironPowerToggle, INPUT);
   pinMode(airPowerToggle, INPUT);
@@ -246,7 +264,22 @@ void setup() {
                                     //(выводим 0 - старт с выключеным паяльником- 
                                     // пока не опредилим состояние температуры)
 
-  analogWrite(pinControlAirFan, fanSpeedPwmReal);                          
+  analogWrite(pinControlAirFan, fanSpeedPwmReal); // stop fan at start
+
+  // --------  Dimmer for air -------
+  D3_Out; //Настраиваем порты на выход (pin 3)
+  D3_Low; //установить на выходах низкий уровень сигнала
+  D2_In;  //настраиваем порт на вход для отслеживания прохождения сигнала через ноль
+
+  //CHANGE – прерывание вызывается при любом изменении значения на входе; 
+  //RISING – вызов прерывания при изменении уровня напряжения с низкого (Low) на высокий(HIGH) 
+  //FALLING – вызов прерывания при изменении уровня напряжения с высокого (HIGH)
+  //LOW - вызов прерывания при высоком уровне напряжения
+  //HIGH - вызов прерывания при низком уровне напряжения
+  attachInterrupt(0, detect_up, LOW); // настроить срабатывание прерывания interrupt0 на pin 2 на низкий
+  StartTimer1(halfcycle, 40); //время для одного разряда ШИМ
+  StopTimer1(); //остановить таймер
+  // ---------------------------------
 
   // ------------------ LCD -----------------
   // set up the LCD's number of columns and rows:
@@ -266,7 +299,7 @@ void setup() {
   lcd.setCursor(0, 0);
   lcd.print("Soldering");
   lcd.setCursor(0, 1);
-  lcd.print("Station FW:0.1");
+  lcd.print("Station FW:0.2");
   lcd.setCursor(15, 0);
   lcd.write(byte(3));
   lcd.setCursor(15, 1);
@@ -296,6 +329,31 @@ void setup() {
 
 }
 
+//********************обработчики прерываний*******************************
+void halfcycle()  //прерывания таймера
+{ 
+  tic++;  //счетчик  
+  if(Dimmer1 < tic ) D3_High; //управляем выходом
+}
+
+void  detect_up()  // обработка внешнего прерывания. Сработает по переднему фронту
+{  
+ tic=0;             //обнулить счетчик
+ ResumeTimer1();   //запустить таймер
+ attachInterrupt(0, detect_down, HIGH);  //перепрограммировать прерывание на другой обработчик
+}  
+
+void  detect_down()  // обработка внешнего прерывания. Сработает по заднему фронту
+{   
+ StopTimer1(); //остановить таймер
+ D3_Low; //логический ноль на выходы
+ tic=0;       //обнулить счетчик
+ attachInterrupt(0, detect_up, LOW); //перепрограммировать прерывание на другой обработчик
+} 
+//***********************************************************************
+
+
+
 void loop() {
 
 // ------------- debug  --------------------//
@@ -322,6 +380,9 @@ Serial.print(airTempSet);
 Serial.print(" | ");
 Serial.print("Real Air: ");
 Serial.print(airTempRealC);
+Serial.print(" | ");
+Serial.print("Dimmer: ");
+Serial.print(Dimmer1);
 Serial.println("");
 #endif
 
@@ -351,6 +412,9 @@ Serial.println("");
 
 // smooth iron meshure values
 smoothIron();
+
+// smooth air meshure values
+smoothAir();
 
 // refresh LCD screen
 show();   
@@ -396,9 +460,6 @@ if ( ironPowerState == 1){ // if iron "ON" switch is enabled
        ironTempPwmReal = 0;  // Выключаем мощность нагрева (шим 0-255  мы делаем 0)  - 
                          // таким образом мы отключаем паяльник
        }
-
- 
-
   analogWrite(pinPwmIron, ironTempPwmReal); // Вывод в шим порт (на транзистор) значение 
 }
 else 
@@ -412,60 +473,46 @@ else
 
 airPowerState = digitalRead(airPowerToggle);
 if ( airPowerState == 1){ // if iron "ON" switch is enabled
-   /*
-  if (airTempReal < airTempSet ){   // if temp of AirGun less set temp than:
-    if ((airTempSet - airTempReal) < 16 & (airTempSet - airTempReal) > 6 )  // check difference between
+   
+  if (airTempRealC < airTempSet ){   // if temp of AirGun less set temp than:
+    if ((airTempSet - airTempRealC) < 16 & (airTempSet - airTempRealC) > 6 )  // check difference between
                                                          // set air temp and current temp,
                                                          // If difference less 10 degree than 
       {
-        airTempPwmReal = airTempPwmHalf; // set heat power to half (pwm 128-0  we set  64)  - 
+        Dimmer1 = airDimmerHalf; // set heat power to half (pwm 128-0  we set  64)  - 
                                          // таким образом мы убираем инерцию перегрева
       }
 
-  else if ((airTempSet - airTempReal) < 4 ) // if difference less 4 degree use min temp
+  else if ((airTempSet - airTempRealC) < 4 ) // if difference less 4 degree use min temp
     {
-      airTempPwmReal = airTempPwmMin; 
+      Dimmer1 = airDimmerMin; 
     }
 
   else 
     {
-      airTempPwmReal = airTempPwmMax; // Иначе Подымаем мощность нагрева(шим 0-255  мы делаем 230) на максимум 
+      Dimmer1 = airDimmerMax; // Иначе Подымаем мощность нагрева(шим 0-255  мы делаем 230) на максимум 
                                         // для быстрого нагрева до нужной температуры
     }
 
-  analogWrite(pinControlAir, airTempPwmReal); // Вывод в шим порт (на транзистор) значение мощности
   }
 
   else { // Иначе (если температура паяльника равняется или выше установленной) 
-       airTempPwmReal = 0;  // Выключаем мощность нагрева (шим 0-255  мы делаем 0)  - 
+       Dimmer1 = airDimmerOff;  // Выключаем мощность нагрева (шим 0-255  мы делаем 0)  - 
                          // таким образом мы отключаем паяльник
-       analogWrite(pinControlAir, airTempPwmReal); // Вывод в шим порт (на транзистор) значение 
        }
 
-  airTempReal = analogRead(pinTempAir); // считываем текущую температуру
-
-  // scale heater temperature to sensor values
-  airTempReal=map(airTempReal, minAirAnalogValue, maxAirAnalogValue, minAirTempValue, maxAirTempValue); 
-                             // нужно вычислить
-                             // 0 sens is 25 on iron - 764 is 295 on iron
-                             // 400 - get 228-232 on iron when ironTempSet = 230
-  incrementAir=airTempReal;
-  */
 }
 else
 {
-  //analogWrite(pinControlAir, 0); // Disable iron heater if switch off
-/*
-  if ( airCooldownState == 0 && incrementAir > minAirTempValue ) // if cooling not start and air temp 
+  Dimmer1 = airDimmerOff;
+
+  if ( airCooldownState == 0 && airTempRealC > minAirTempValue+5 ) // if cooling not start and air temp 
   {                                                             // more room temp
     airCooldownState = 1;        // cooldown started
   }
-  */
+  
 }
-
-
 //----------------------------------------------------------------------------------------------------
-
 
 
 // --------------  Air Fan control  --------------------------
@@ -475,25 +522,15 @@ if ( airPowerState == 1 && airCooldownState == 0 ) // if cooling not start - nor
   fanSpeedPwmReal=map(fanSpeedSet, fanSpeedMin, fanSpeedMax, fanSpeedPwmMin, fanSpeedPwmMax);
   analogWrite(pinControlAirFan, fanSpeedPwmReal); 
 }
-else if ( airPowerState == 0 ) // if air switch off
-{
-  if ( airCooldownState == 1 ) //  if cooling trigered
-  {
-   if ( airTempRealC > minAirTempValue+5) // if air switch off and temp more than room temp
-    {
-      analogWrite(pinControlAirFan, fanSpeedPwmMax); // run fan on max speed to cooling
-    }
-    else
-    { // when temp down to room temp disable cooling triger
-      airCooldownState = 0;        // cooldown stoped, air temp eq room temp
-    }
-  }
-  else
-  { // if air is off and cooling not start just off fan
-    analogWrite(pinControlAirFan, 0);
-  }
-  
+else if ( airPowerState == 0 && airCooldownState == 1) // if air switch off
+{                                                      // and cooling started
+  Cooldown(); // start cooling 
 }
+else
+  { // if air is off and cooling not start just off fan
+    fanSpeedPwmReal = 0;
+    analogWrite(pinControlAirFan, fanSpeedPwmReal);
+  }  
 //------------------------------------------------------
 
 //---------------- buttons ---------------//
@@ -513,12 +550,10 @@ if( buttonLastChecked == 0 ) // see if this is the first time checking the butto
      if ( ironTempSet <= ironTempMin || (ironTempSet-5) <= ironTempMin )
       {
         ironTempSet = ironTempMin;
-     //   incrementIron = ironTempSet;
       }
 
      else {
           ironTempSet=ironTempSet-5;
-        //  incrementIron = ironTempSet;
           }
       }
  
@@ -531,7 +566,6 @@ if( buttonLastChecked == 0 ) // see if this is the first time checking the butto
       else {
           ironTempSet=ironTempSet+5;
            }
-//     incrementIron = ironTempSet;
       }
      //------------------------------------------
 
@@ -541,12 +575,10 @@ if( buttonLastChecked == 0 ) // see if this is the first time checking the butto
      if ( airTempSet <= airTempMin || (airTempSet-5) <= airTempMin )
       {
         airTempSet = airTempMin;
-        incrementAir = airTempSet;
       }
 
      else {
           airTempSet=airTempSet-5;
-          incrementAir = airTempSet;
           }
       }
  
@@ -559,7 +591,6 @@ if( buttonLastChecked == 0 ) // see if this is the first time checking the butto
       else {
           airTempSet=airTempSet+5;
            }
-     incrementAir = airTempSet;
       }
     //--------------------------------------------
 
@@ -672,6 +703,30 @@ void smoothIron()
 }
 //------------------------------------------------------------------  
 
+//----------------  smooth Air -----------------
+void smoothAir()
+{
+  // subtract the last reading:
+  totalAir = totalAir - readingsAir[readIndexAir];
+  // read from the sensor:
+  readingsAir[readIndexAir] = airTempRealC; // bouncing value !
+  // add the reading to the total:
+  totalAir = totalAir + readingsAir[readIndexAir];
+  // advance to the next position in the array:
+  readIndexAir = readIndexAir + 1;
+
+  // if we're at the end of the array...
+  if (readIndexAir >= numReadingsAir) {
+    // ...wrap around to the beginning:
+    readIndexAir = 0;
+  }
+  // calculate the average:
+  averageAirTemp = totalAir / numReadingsAir;
+  averageAirTempPretty = averageAirTemp+2; // to get more pretty value (300 when avarage 298) just for perfect 
+}
+//------------------------------------------------------------------  
+
+
 // ----------------------------------  LCD ------------------------
 void show()
 {
@@ -767,20 +822,20 @@ void show()
  lcd.setCursor(2, 1);
  if ( airPowerState == 1 && airCooldownState == 0 ) // if cooling not start - normal work
  {
-  lcd.print(ironTempPwmReal);
+  lcd.print(averageAirTempPretty);
   lcd.setCursor(5, 1);
   lcd.write(byte(0));
  }
  else if ( airPowerState == 0 && airCooldownState == 1 ) // if cooling start
  {
-  lcd.print(ironTempPwmReal);
+  lcd.print(averageAirTempPretty);
   lcd.setCursor(5, 1);
   lcd.write(byte(0));
  }
- else
- {
-  lcd.print("OFF ");
- }
+ //else
+ //{
+ // lcd.print("OFF ");
+// }
  
  lcd.setCursor(6, 1);
  lcd.print(">");
@@ -887,5 +942,23 @@ void alertSound(int val)
      beepState = 0;
      noTone(buzzerPin);
    }
+}
+
+void Cooldown()
+{
+  unsigned long currentMillisCooldown = millis(); // get current time
+
+   if (currentMillisCooldown - previousMillisCooldown <= cooldownTime) 
+   { // need more cooling
+      fanSpeedPwmReal = fanSpeedPwmMax; // run fan on max speed to cooling
+      analogWrite(pinControlAirFan, fanSpeedPwmReal); 
+   } 
+   else // cooling done
+   {
+    // save the last time you Cooldown
+    previousMillisCooldown = currentMillisCooldown;
+    // disable cooling
+    airCooldownState = 0;        // cooldown stoped, air temp eq room temp
+   }        
 }
 
