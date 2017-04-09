@@ -210,7 +210,7 @@ byte linesFull[8] = {
 
 
 //---------- analog smoothing Iron -----------------
-const int numReadingsIron = 100;
+const int numReadingsIron = 30;
 
 int readingsIron[numReadingsIron];  // the readings from the analog input
 int readIndexIron = 0;              // the index of the current reading
