@@ -530,7 +530,7 @@ else
 {
   Dimmer1 = airDimmerOff;
 
-  if ( airCooldownState == 0 && averageAirTemp > minAirTempValue+8 ) // if cooling not start and air temp 
+  if ( airCooldownState == 0 && averageAirTemp > minAirTempValue+8 &&  airTempReal < 765 )  // if cooling not start and air temp 
   {                                                                // more room temp 
     airCooldownState = 1;        // cooldown started
   }
