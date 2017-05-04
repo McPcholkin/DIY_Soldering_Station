@@ -7,8 +7,11 @@
  */
 // enable debug serial output 
 //#define DEBUGIRON
-//#define DEBUGAIR
-//#define SERIALDEBUG
+#define DEBUGAIR
+//#define DEBUGBUTTONS
+//#define DEBUG_ON
+#define SERIALDEBUG
+
 
 // enable sound
 #define SOUND 1
@@ -25,8 +28,8 @@ const int pinControlAirFan = 5; // pwm to fan
 const int pinTempAir = A1; // input from termal sensor in iron
 
 // Power toggles
-const int ironPowerToggle = 10;
-const int airPowerToggle = 11;
+const int ironPowerToggle = 11;
+const int airPowerToggle = 10;
 
 //  Buzzer pin
 const int buzzerPin = 9;
@@ -291,7 +294,7 @@ void setup() {
   lcd.setCursor(0, 0);
   lcd.print("Soldering");
   lcd.setCursor(0, 1);
-  lcd.print("Station FW:0.4");
+  lcd.print("Station FW:0.5");
   lcd.setCursor(15, 0);
   lcd.write(byte(3));
   lcd.setCursor(15, 1);
@@ -407,6 +410,22 @@ Serial.print(" | ");
 Serial.print("Iron PWM: ");
 Serial.print(ironTempPwmReal);
 Serial.println("");
+#endif
+
+
+#ifdef DEBUGBUTTONS
+int analog4 = analogRead(controlButtonsPin);
+int gercon = digitalRead(17);
+
+Serial.print("Analog: ");
+Serial.print(analog4);
+Serial.print(" | ");
+Serial.print("Gercon: ");
+Serial.print(gercon);
+
+Serial.println("");
+delay(200);
+
 #endif
 // ------------- debug end --------------------//
 
@@ -550,7 +569,7 @@ if( buttonLastChecked == 0 ) // see if this is the first time checking the butto
      #endif
 
      // ------ iron  -----------------------------
-     if (buttNum == 1) // Iron temp Down
+     if (buttNum == 8) // Iron temp Down
        {
      if ( ironTempSet <= ironTempMin || (ironTempSet-5) <= ironTempMin )
       {
@@ -562,7 +581,7 @@ if( buttonLastChecked == 0 ) // see if this is the first time checking the butto
           }
       }
  
-    else if (buttNum == 2) // Iron temp Up
+    else if (buttNum == 7) // Iron temp Up
       {
       if ( ironTempSet >= ironTempMax )
         {
@@ -575,7 +594,7 @@ if( buttonLastChecked == 0 ) // see if this is the first time checking the butto
      //------------------------------------------
 
      // --- air ----------------------------------
-     if (buttNum == 3) // Air temp Down
+     if (buttNum == 5) // Air temp Down
        {
      if ( airTempSet <= airTempMin || (airTempSet-5) <= airTempMin )
       {
@@ -587,7 +606,7 @@ if( buttonLastChecked == 0 ) // see if this is the first time checking the butto
           }
       }
  
-    else if (buttNum == 4) // Air temp Up
+    else if (buttNum == 6) // Air temp Up
       {
       if ( airTempSet >= airTempMax )
         {
@@ -600,7 +619,7 @@ if( buttonLastChecked == 0 ) // see if this is the first time checking the butto
     //--------------------------------------------
 
     //-------------- Fan ------------------
-     if (buttNum == 5) // Fan Speed Down
+     if (buttNum == 1) // Fan Speed Down
        {
      if ( fanSpeedSet <= fanSpeedMin || (fanSpeedSet-5) <= fanSpeedMin )
       {
@@ -612,7 +631,7 @@ if( buttonLastChecked == 0 ) // see if this is the first time checking the butto
           }
       }
  
-    else if (buttNum == 6) // Fan Speed Up
+    else if (buttNum == 2) // Fan Speed Up
       {
       if ( fanSpeedSet >= fanSpeedMax )
         {
@@ -678,6 +697,18 @@ int buttonPushed(int pinNum) {
      Serial.println("switch 6 pressed/triggered");    
      #endif
      return 6;
+   }
+   else if( val >= (612-BUTTON_ERROR_WINDOW) and val <= (625+BUTTON_ERROR_WINDOW) )  { // 612-625
+     #ifdef DEBUG_ON
+     Serial.println("switch 7 pressed/triggered");    
+     #endif
+     return 7;
+   }
+   else if( val >= (653-BUTTON_ERROR_WINDOW) and val <= (660+BUTTON_ERROR_WINDOW) )  { // 653-660
+     #ifdef DEBUG_ON
+     Serial.println("switch 8 pressed/triggered");    
+     #endif
+     return 8;
    }
    else
      return 0;  // no button found to have been pushed
