@@ -5,12 +5,12 @@
  * Also used examples from:
  * Doug LaRu, alex.marinenko, David A. Mellis, Paul Stoffregen, Scott Fitzgerald, Arturo Guadalupi
  */
-// enable debug serial output 
+// enable debug serial output  //
 //#define DEBUGIRON
-#define DEBUGAIR
+//#define DEBUGAIR
 //#define DEBUGBUTTONS
 //#define DEBUG_ON
-#define SERIALDEBUG
+//#define SERIALDEBUG
 
 
 // enable sound
@@ -294,7 +294,7 @@ void setup() {
   lcd.setCursor(0, 0);
   lcd.print("Soldering");
   lcd.setCursor(0, 1);
-  lcd.print("Station FW:0.5");
+  lcd.print("Station FW:0.6");
   lcd.setCursor(15, 0);
   lcd.write(byte(3));
   lcd.setCursor(15, 1);
@@ -497,7 +497,7 @@ else
 
 airPowerState = digitalRead(airPowerToggle);
 if ( airPowerState == 1){ // if iron "ON" switch is enabled
-   
+ 
   if (airTempRealC < airTempSet ){   // if temp of AirGun less set temp than:
     if ((airTempSet - airTempRealC) < 16 & (airTempSet - airTempRealC) > 6 )  // check difference between
                                                          // set air temp and current temp,
@@ -524,13 +524,12 @@ if ( airPowerState == 1){ // if iron "ON" switch is enabled
        Dimmer1 = airDimmerOff;  // Выключаем мощность нагрева (шим 0-255  мы делаем 0)  - 
                          // таким образом мы отключаем паяльник
        }
-
 }
 else
 {
   Dimmer1 = airDimmerOff;
 
-  if ( airCooldownState == 0 && averageAirTemp > minAirTempValue+8 &&  airTempReal < 765 )  // if cooling not start and air temp 
+  if ( airCooldownState == 0 && averageAirTemp > minAirTempValue+8 &&  airTempReal < 760 )  // if cooling not start and air temp 
   {                                                                // more room temp 
     airCooldownState = 1;        // cooldown started
   }
