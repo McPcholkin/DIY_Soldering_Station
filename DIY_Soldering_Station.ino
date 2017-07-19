@@ -663,14 +663,14 @@ if( buttonLastChecked == 0 )                               // check if this is t
 
 //------------------------------------ Buttons analog values check -------------------------------------
 int buttonPushed(int pinNum) {
- int val = 0;         // variable to store the read value
+ int val = 0;                  // init variable to store the read value
    val = analogRead(pinNum);   // read the input pin
    
-   #ifdef DEBUG_ON
+   #ifdef DEBUG_ON //some debug
      Serial.println(val);
    #endif
    
-
+   // check values (meshured in debug mode)
    if( val >= (1012-BUTTON_ERROR_WINDOW) and val <= (1015+BUTTON_ERROR_WINDOW) ) {  // 1012-1015
      #ifdef DEBUG_ON
      Serial.println("switch 1 pressed/triggered");
@@ -722,7 +722,7 @@ int buttonPushed(int pinNum) {
    else
      return 0;  // no button found to have been pushed
 }
-// --------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------
 
 
 //----------------  smooth iron -----------------
@@ -746,7 +746,7 @@ void smoothIron()
   averageIronTemp = totalIron / numReadingsIron;
   averageIronTempPretty = averageIronTemp+3; // to get more pretty value (230 when avarage 227) just for perfect 
 }
-//------------------------------------------------------------------  
+//----------------------------------------------  
 
 //----------------  smooth Air -----------------
 void smoothAir()
@@ -769,19 +769,19 @@ void smoothAir()
   averageAirTemp = totalAir / numReadingsAir;
   averageAirTempPretty = averageAirTemp+2; // to get more pretty value (300 when avarage 298) just for perfect 
 }
-//------------------------------------------------------------------  
+//----------------------------------------------  
 
 
-// ----------------------------------  LCD ------------------------
+// ---------------------------------- LCD control ------------------------------------------------
 void show()
 {
-  static unsigned long last_lcd_refresh_time = 0;
- unsigned long lcd_refresh_time = millis();
+  static unsigned long last_lcd_refresh_time = 0; // init value to store last refresh time
+ unsigned long lcd_refresh_time = millis();       // write time
  // If interrupts come faster than 200ms, assume it's a bounce and ignore
  if (lcd_refresh_time - last_lcd_refresh_time > lcdRefreshTime)
  {
  
- if ( ironDisconnected == 1) // if iron disconnected
+ if ( ironDisconnected == 1) // check if iron disconnected
  {
   lcd.setCursor(0, 0);
   lcd.print("I:");
@@ -804,15 +804,15 @@ void show()
     lcd.print("I:");
     lcd.setCursor(2, 0);
    }
-   lcd.print(averageIronTempPretty);
+   lcd.print(averageIronTempPretty); // print iron current temp
    lcd.setCursor(5, 0);
-   lcd.write(byte(0));
+   lcd.write(byte(0));               // custom symbol
    lcd.setCursor(6, 0);
    lcd.print("> ");
    lcd.setCursor(8, 0);
-   lcd.print(ironTempSet);
+   lcd.print(ironTempSet);           // print iron set temp
    lcd.setCursor(11, 0);
-   lcd.write(byte(0));
+   lcd.write(byte(0));               // custom symbol
   }
   else if ( ironPowerState == 0 && (averageIronTemp - minIronTempValue) > 10)  // iron is off and temp more than
   {                                                                            // min temp, iron is cooling
@@ -827,53 +827,49 @@ void show()
     lcd.print("I:");
     lcd.setCursor(2, 0);
    }
-   lcd.print(averageIronTempPretty);
+   lcd.print(averageIronTempPretty); // print iron current temp
    lcd.setCursor(5, 0);
-   lcd.write(byte(0));
+   lcd.write(byte(0));               // custom symbol
    lcd.setCursor(6, 0);
    lcd.print("> ");
    lcd.setCursor(8, 0);
-   lcd.print("COOL");
+   lcd.print("COOL");                // print "COOL" insead of set temp
   }
-  else
+  else                               // if iron temp is room temp - is off
   {
     lcd.setCursor(0, 0);
     lcd.print("I:");
     lcd.setCursor(2, 0);
-    lcd.print("OFF");
+    lcd.print("OFF");               // print "OFF" insead of current temp
     lcd.setCursor(5, 0);
     lcd.write(" ");
     lcd.setCursor(6, 0);
     lcd.print("> ");
     lcd.setCursor(8, 0);
-    lcd.print(ironTempSet);
+    lcd.print(ironTempSet);         // print iron set temp
     lcd.setCursor(11, 0);
     lcd.write(byte(0));
   }
 
-  lcd.setCursor(12, 0);  // hold space for "Disconnected"
+  lcd.setCursor(12, 0);            // hold space for "Disconnected"
   lcd.print("    ");
  }
-    
-   
- // iron state
-// lcd.setCursor(13, 0);
-// lcd.print("SLP");
 
- // HeatGun temp
-if ( airDisconnected == 1) // if air disconnected
+    
+// HeatGun temp
+if ( airDisconnected == 1) // check if air disconnected
  {
   lcd.setCursor(0, 1);
   lcd.print("A:");
   lcd.setCursor(2, 1);
   lcd.print("Disconnected  ");
  }
- else // air connected
+ else // if air connected
  {
 
- if (airPowerState == 1 )
+ if (airPowerState == 1 ) // check if air is on
   {
-   // air temp when air is ON
+   // print air temp when air is ON
    lcd.setCursor(0, 1);
    if (averageAirTempPretty <= 99) // if temp is two digit value
    {
@@ -885,15 +881,15 @@ if ( airDisconnected == 1) // if air disconnected
     lcd.print("A:");
     lcd.setCursor(2, 1);
    }
-   lcd.print(averageAirTempPretty);
+   lcd.print(averageAirTempPretty);  // print air temp
    lcd.setCursor(5, 1);
-   lcd.write(byte(0));
+   lcd.write(byte(0));               // custom symbol
    lcd.setCursor(6, 1);
    lcd.print("> ");
    lcd.setCursor(8, 1);
-   lcd.print(airTempSet);
+   lcd.print(airTempSet);            // print set temp
    lcd.setCursor(11, 1);
-   lcd.write(byte(0));
+   lcd.write(byte(0));               // custom symbol
   }
  else if ( airPowerState == 0 && airCooldownState == 1)  // if cooling start
  {
@@ -933,17 +929,17 @@ if ( airDisconnected == 1) // if air disconnected
   }  
 
 
-  // HeatGun fan speed
+// HeatGun fan speed
  lcd.setCursor(12, 1);
  lcd.write(byte(1));
  lcd.setCursor(13, 1);
    if ( fanSpeedSet == 100 )
    {
-    lcd.print(fanSpeedSet);
+    lcd.print(fanSpeedSet);  // if fan speed is 100 print only digits
    }
    else 
    {
-    lcd.print(fanSpeedSet);
+    lcd.print(fanSpeedSet);  // if fan speed 99 or less print "%" after value
     lcd.setCursor(15, 1);
     lcd.print("%");
    }
@@ -951,39 +947,44 @@ if ( airDisconnected == 1) // if air disconnected
 
 
 
- last_lcd_refresh_time = lcd_refresh_time;
+ last_lcd_refresh_time = lcd_refresh_time; // write last lcd refresh time 
 }
 }
+// ---------------------------------------------------------------------------------------------
 
-void GetIronTemp()  // get iron temp in celsius
+
+// -----------------------------------  Read iron temp -----------------------------------------
+void GetIronTemp()                        // get iron temp in celsius
 {
- ironTempReal = analogRead(pinTempIron); // считываем текущую температуру
+ ironTempReal = analogRead(pinTempIron);  // read current temp (analog value) 
  // scale heater temperature to sensor values
  ironTempRealC = map(ironTempReal, minIronAnalogValue, maxIronAnalogValue, minIronTempValue, maxIronTempValue);
- ironTempRealC = constrain(ironTempRealC, minIronTempValue, maxIronTempValue); // limit iron temp    
+ ironTempRealC = constrain(ironTempRealC, minIronTempValue, maxIronTempValue); // limit iron temp to real values
 }
+// ----------------------------------------------------------------------------------------------
 
-void GetAirTemp()  // get air temp in celsius
+// ---------------------------------- Read air temp ---------------------------------------------
+void GetAirTemp()                      // get air temp in celsius
 {
- airTempReal = analogRead(pinTempAir); // считываем текущую температуру
+ airTempReal = analogRead(pinTempAir); // read current temp (analog value)
  // scale heater temperature to sensor values
  airTempRealC = map(airTempReal, minAirAnalogValue, maxAirAnalogValue, minAirTempValue, maxAirTempValue);
- airTempRealC = constrain(airTempRealC, minAirTempValue, maxAirTempValue); // limit air temp    
-
+ airTempRealC = constrain(airTempRealC, minAirTempValue, maxAirTempValue); // limit air temp  to real values
 }
+// -----------------------------------------------------------------------------------------------
 
-
-void disconnectAlert() // detect disconnected alert
+// ---------------------------------  Disconnected allert ----------------------------------------
+void disconnectAlert()            // detect disconnected alert
 {
-  int alertIron = 0;
-  int alertAir = 0;
+  int alertIron = 0;              // init var to store iron alert status
+  int alertAir = 0;               // init var to store air alert status
   
-  if ( airTempReal >= 760 && airPowerState == 1 ) //if air disconnected on work
-  {
+  if ( airTempReal >= 760 && airPowerState == 1 ) // check if air analog value is 760 (meshured on disconnected)
+  {                                               // and iron power switch is ON
      airDisconnected = 1; // chandge status
      alertAir = 1;        // signal is needed
   }
-  else if ( airTempReal >= 760 && airPowerState == 0 ) //if air disconnected on off
+  else if ( airTempReal >= 760 && airPowerState == 0 ) // if air disconnected on off and analog value is 760 (meshured on disconnected)
   {
     airDisconnected = 1; // chandge status
     alertAir = 0;        // signal is NOT needed
@@ -1009,15 +1010,17 @@ void disconnectAlert() // detect disconnected alert
     alertIron = 0;         // signal is NOT needed
   }
 
-  int soundAlert = alertIron + alertAir; 
-  alertSound(soundAlert);
+  int soundAlert = alertIron + alertAir; // plus alert values 
+  alertSound(soundAlert);                // call sound func
 }
+// -------------------------------------------------------------------------------------------
 
+// --------------------------  Sound function ------------------------------------------------
 void alertSound(int val)
 {
-  if ( val >= 1) // enable beeper if any of alert is active
+  if ( val >= 1)                                // enable beeper if any of alert is active 
   {
-   unsigned long currentMillisBeep = millis(); // get current time
+   unsigned long currentMillisBeep = millis();  // get current time
 
    if (currentMillisBeep - previousMillisBeep >= intervalBeep) 
      {
@@ -1045,22 +1048,26 @@ void alertSound(int val)
      noTone(buzzerPin);
    }
 }
+// ---------------------------------------------------------------------------------------
 
+// -------------------------------  Coooling air -----------------------------------------
 void Cooldown()
 {
   unsigned long currentMillisCooldown = millis(); // get current time
 
    if (currentMillisCooldown - previousMillisCooldown <= cooldownTime) 
-   { // need more cooling
-      fanSpeedPwmReal = fanSpeedPwmMax; // run fan on max speed to cooling
+   {                                              // need more cooling
+      fanSpeedPwmReal = fanSpeedPwmMax;           // run fan on max speed to cooling
       analogWrite(pinControlAirFan, fanSpeedPwmReal); 
    } 
-   else // cooling done
+   else                                           // cooling done
    {
-    // save the last time you Cooldown
+                                                  // save the last time you Cooldown
     previousMillisCooldown = currentMillisCooldown;
-    // disable cooling
-    airCooldownState = 0;        // cooldown stoped, air temp eq room temp
+                                                  // disable cooling
+    airCooldownState = 0;                         // cooldown stoped, air temp eq room temp
    }        
 }
+// --------------------------------------------------------------------------------------
+
 
