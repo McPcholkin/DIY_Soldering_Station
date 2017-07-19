@@ -250,32 +250,36 @@ void setup() {
   #ifdef SERIALDEBUG
     Serial.begin(115200);
   #endif
-    
+  
+  // Config pins  
   pinMode(pinPwmIron, OUTPUT);
   pinMode(pinControlAirFan, OUTPUT);
   pinMode(ironPowerToggle, INPUT);
   pinMode(airPowerToggle, INPUT);
+  
+  analogWrite(pinPwmIron, ironTempPwmReal); // Write PWM to Iron output
+                                            // (Write 0 - start with iron OFF -
+                                            // until get iron temp)
 
-  analogWrite(pinPwmIron, ironTempPwmReal); //Вывод  шим в нагрузку паяльника 
-                                    //(выводим 0 - старт с выключеным паяльником- 
-                                    // пока не опредилим состояние температуры)
+  analogWrite(pinControlAirFan, fanSpeedPwmReal); // Write PWM to Air fan
+                                                  // (Write 0 - start with fan OFF -
+                                                  // until get air temp)
 
-  analogWrite(pinControlAirFan, fanSpeedPwmReal); // stop fan at boot
 
-  // --------  Dimmer for air -------
-  D3_Out; //Настраиваем порты на выход (pin 3)
-  D3_Low; //установить на выходах низкий уровень сигнала
-  D2_In;  //настраиваем порт на вход для отслеживания прохождения сигнала через ноль
+  // --------  Dimmer for air setup -------
+  D3_Out; // set ports to output (pin 3)
+  D3_Low; // set LOW signal level to output
+  D2_In;  // set port to input fot detect zero-cross signal
 
-  //CHANGE – прерывание вызывается при любом изменении значения на входе; 
-  //RISING – вызов прерывания при изменении уровня напряжения с низкого (Low) на высокий(HIGH) 
-  //FALLING – вызов прерывания при изменении уровня напряжения с высокого (HIGH)
-  //LOW - вызов прерывания при высоком уровне напряжения
-  //HIGH - вызов прерывания при низком уровне напряжения
-  attachInterrupt(0, detect_up, LOW); // настроить срабатывание прерывания interrupt0 на pin 2 на низкий
-  StartTimer1(halfcycle, 40); //время для одного разряда ШИМ
-  StopTimer1(); //остановить таймер
-  // ---------------------------------
+  //CHANGE  – interrupt call on ANY value chandge on input 
+  //RISING  – interrupt call on chandge level from LOW to HIGH on input
+  //FALLING – interrupt call on chandge level from HIGH to LOW on input
+  //LOW     – interrupt call on HIGH level on input
+  //HIGH    – interrupt call on LOW level on input
+  attachInterrupt(0, detect_up, LOW); // set interrupt triggering - "interrupt0" on "pin 2" to LOW
+  StartTimer1(halfcycle, 40);         // time to one PWM rate
+  StopTimer1();                       // stop timer
+  // -------------------------------------
 
   // ------------------ LCD -----------------
   // set up the LCD's number of columns and rows:
@@ -318,6 +322,7 @@ void setup() {
 
   //---------------------- LCD --------------
 
+  // ----- set smooth to zeros --------
   // initialize all the readings iron temp to 0:
   for (int thisReadingIron = 0; thisReadingIron < numReadingsIron; thisReadingIron++) {
     readingsIron[thisReadingIron] = 0;
@@ -326,34 +331,36 @@ void setup() {
   for (int thisReadingAir = 0; thisReadingAir < numReadingsAir; thisReadingAir++) {
     readingsAir[thisReadingAir] = 0;
   }
-
+  // ----------------------------------
 }
+// setup done
 
-//********************обработчики прерываний*******************************
-void halfcycle()  //прерывания таймера
+
+// ----------------------------- interrupt hendlers -----------------------------
+void halfcycle()  // timer interrupt
 { 
-  tic++;  //счетчик  
-  if(Dimmer1 < tic ) D3_High; //управляем выходом
+  tic++;          // counter
+  if(Dimmer1 < tic ) D3_High; // output controll
 }
 
-void  detect_up()  // обработка внешнего прерывания. Сработает по переднему фронту
+void  detect_up() // handle outside interrupt. start by up front
 {  
- tic=0;             //обнулить счетчик
- ResumeTimer1();   //запустить таймер
- attachInterrupt(0, detect_down, HIGH);  //перепрограммировать прерывание на другой обработчик
+ tic=0;           // reset counter
+ ResumeTimer1();  // start counter
+ attachInterrupt(0, detect_down, HIGH); // reprogram interrupt to other hendler
 }  
 
-void  detect_down()  // обработка внешнего прерывания. Сработает по заднему фронту
+void  detect_down() // handle outside interrupt. start by down front
 {   
- StopTimer1(); //остановить таймер
- D3_Low; //логический ноль на выходы
- tic=0;       //обнулить счетчик
- attachInterrupt(0, detect_up, LOW); //перепрограммировать прерывание на другой обработчик
+ StopTimer1();      // stop timer
+ D3_Low;            // logical zero to output 
+ tic=0;             // reset counter 
+ attachInterrupt(0, detect_up, LOW);   // reprogram interrupt to other hendler
 } 
-//***********************************************************************
+// ----------------------------------------------------------------------------
 
 
-
+// main loop
 void loop() {
 
 // ------------- debug  --------------------//
@@ -431,7 +438,7 @@ delay(200);
 // ------------- debug end --------------------//
 
 
-// ---------------------  Main code --------------
+// ---------------------  Main code -----------------
 
 // smooth iron meshure values
 smoothIron();
@@ -445,39 +452,37 @@ show();
 // read iron temp 
 GetIronTemp();
 
-// alert when iron or air is diconnected
-disconnectAlert();
-
 // read air temp
 GetAirTemp();
 
+// alert when iron or air is diconnected
+disconnectAlert();
 
+// ----------------------------------------------------
 
-// ------------------------------------------------
-
-// ------------------------------  Iron temp control  -------------------------------------------------------
+// ------------------------------  Iron temp control logic ----------------------------------------------------
 
 ironPowerState = digitalRead(ironPowerToggle);
-if ( ironPowerState == 1){ // if iron "ON" switch is enabled
+if ( ironPowerState == 1){            // check if iron "ON" switch is enabled
   
-  if (ironTempRealC < ironTempSet ){   // Если температура паяльника ниже установленной температуры то:
-    if ((ironTempSet - ironTempRealC) < 16 & (ironTempSet - ironTempRealC) > 6 )  // Проверяем разницу между 
-                                                         // установленной температурой и текущей паяльника,
-                                                         // Если разница меньше 10 градусов то 
+  if (ironTempRealC < ironTempSet ){  // if iron temp lower then set temp do:
+    if ((ironTempSet - ironTempRealC) < 16 & (ironTempSet - ironTempRealC) > 6 ) // check difference between -
+                                                                        // set iron temp and current iron temp,
+                                                                        // if difference less 10 degree than: 
       {
-        ironTempPwmReal = ironTempPwmHalf; // Понижаем мощность нагрева (шим 0-255  мы делаем 99)  - 
-                                           // таким образом мы убираем инерцию перегрева
+        ironTempPwmReal = ironTempPwmHalf; // set heater power to half (PWM 0-255 we set 99) - 
+                                           // by that we decrease heater inertia
       }
 
-  else if ((ironTempSet - ironTempRealC) < 4 ) // if difference less 4 degree use min temp
+  else if ((ironTempSet - ironTempRealC) < 4 ) // if difference less 4 degree set minimal PWM
     {
       ironTempPwmReal = ironTempPwmMin; 
     }
 
   else 
     {
-      ironTempPwmReal = ironTempPwmMax; // Иначе Подымаем мощность нагрева(шим 0-255  мы делаем 230) на максимум 
-                                        // для быстрого нагрева до нужной температуры
+      ironTempPwmReal = ironTempPwmMax; // else set heater power to max (PWM 0-255 we set 230) 
+                                        // for fast heating to set temperature 
     }
   }
 
