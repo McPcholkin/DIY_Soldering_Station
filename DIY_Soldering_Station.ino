@@ -486,178 +486,182 @@ if ( ironPowerState == 1){            // check if iron "ON" switch is enabled
     }
   }
 
-  else { // Иначе (если температура паяльника равняется или выше установленной) 
-       ironTempPwmReal = 0;  // Выключаем мощность нагрева (шим 0-255  мы делаем 0)  - 
-                         // таким образом мы отключаем паяльник
+  else {                      // else (if iron temp equal or higher then set ) 
+       ironTempPwmReal = 0;   // disable heater (PWM 0-255 we set 0) - 
+                              // by that we disable iron heater
        }
-  analogWrite(pinPwmIron, ironTempPwmReal); // Вывод в шим порт (на транзистор) значение 
+  analogWrite(pinPwmIron, ironTempPwmReal);  // write PWM value to transistor port 
 }
 else 
 {
-  analogWrite(pinPwmIron, 0); // Disable iron heater if switch off
+  analogWrite(pinPwmIron, 0); // Disable iron heater if iron switch is OFF
 }
 
 //----------------------------------------------------------------------------------------------------
 
-// ------------------------------  Air temp control  -------------------------------------------------------
+
+// ------------------------------  Air temp control logic  -------------------------------------------------------
 
 airPowerState = digitalRead(airPowerToggle);
-if ( airPowerState == 1){ // if iron "ON" switch is enabled
+if ( airPowerState == 1){           // check if air "ON" switch is enabled
  
-  if (airTempRealC < airTempSet ){   // if temp of AirGun less set temp than:
-    if ((airTempSet - airTempRealC) < 16 & (airTempSet - airTempRealC) > 6 )  // check difference between
-                                                         // set air temp and current temp,
-                                                         // If difference less 10 degree than 
+  if (airTempRealC < airTempSet ){  // if temp of AirGun less then set temp do:
+    if ((airTempSet - airTempRealC) < 16 & (airTempSet - airTempRealC) > 6 )  // check difference between -
+                                                                        // set air temp and current temp,
+                                                                        // If difference less 10 degree than: 
       {
-        Dimmer1 = airDimmerHalf; // set heat power to half (pwm 128-0  we set  64)  - 
-                                         // таким образом мы убираем инерцию перегрева
+        Dimmer1 = airDimmerHalf;   // set heater power to half (delay 128-0  we set  64)  - 
+                                   // by that we decrease heater inertia
       }
 
-  else if ((airTempSet - airTempRealC) < 4 ) // if difference less 4 degree use min temp
+  else if ((airTempSet - airTempRealC) < 4 )  // if difference less 4 degree set max delay
     {
       Dimmer1 = airDimmerMin; 
     }
 
   else 
     {
-      Dimmer1 = airDimmerMax; // Иначе Подымаем мощность нагрева(шим 0-255  мы делаем 230) на максимум 
-                                        // для быстрого нагрева до нужной температуры
+      Dimmer1 = airDimmerMax;    // else set heater power to max  
+                                 // for fast heating to set temperature
     }
 
   }
 
-  else { // Иначе (если температура паяльника равняется или выше установленной) 
-       Dimmer1 = airDimmerOff;  // Выключаем мощность нагрева (шим 0-255  мы делаем 0)  - 
-                         // таким образом мы отключаем паяльник
+  else {                        // else (if air temp equal or higher then set )   
+       Dimmer1 = airDimmerOff;  // disable air heater - 
        }
 }
 else
 {
-  Dimmer1 = airDimmerOff;
+  Dimmer1 = airDimmerOff;      // write OFF value 
 
-  if ( airCooldownState == 0 && averageAirTemp > minAirTempValue+8 &&  airTempReal < 760 )  // if cooling not start and air temp 
-  {                                                                // more room temp 
-    airCooldownState = 1;        // cooldown started
+  if ( airCooldownState == 0 && averageAirTemp > minAirTempValue+8 &&  airTempReal < 760 )  // if cooling not start and air temp -
+  {                                                                                         // more then room temp: start cooldown
+    airCooldownState = 1;                                                                   // (760 is sensor value on disconnected air gun)
   }
   
 }
-//----------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------
 
 
-// --------------  Air Fan control  --------------------------
-if ( airPowerState == 1 && airCooldownState == 0 ) // if cooling not start - normal work
+// --------------------------------  Air gun Fan control  -------------------------------------------
+if ( airPowerState == 1 && airCooldownState == 0 )    // if cooling not start: normal work
 {
   // get PWM value from % value
   fanSpeedPwmReal=map(fanSpeedSet, fanSpeedMin, fanSpeedMax, fanSpeedPwmMin, fanSpeedPwmMax);
   analogWrite(pinControlAirFan, fanSpeedPwmReal); 
 }
-else if ( airPowerState == 0 && airCooldownState == 1) // if air switch off
-{                                                      // and cooling started
-  Cooldown(); // start cooling 
+else if ( airPowerState == 0 && airCooldownState == 1) // if air switch off and cooling started
+{                                                      
+  Cooldown();                                          // start cooling 
 }
 else
-  { // if air is off and cooling not start just off fan
-    fanSpeedPwmReal = 0;
+  {                                                    // if air is off and cooling not start
+    fanSpeedPwmReal = 0;                               // just off fan
     analogWrite(pinControlAirFan, fanSpeedPwmReal);
   }  
-//------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 
-//---------------- buttons ---------------//
 
-if( buttonLastChecked == 0 ) // see if this is the first time checking the buttons
-   buttonLastChecked = millis()+BUTTON_DELAY;  // force a check this cycle
- if( millis() - buttonLastChecked > BUTTON_DELAY ) { // make sure a reasonable delay passed
+
+//---------------------------------- analog buttons ----------------------------------------------//
+
+if( buttonLastChecked == 0 )                               // check if this is the first time read buttons
+   buttonLastChecked = millis()+BUTTON_DELAY;              // force a check this cycle
+ if( millis() - buttonLastChecked > BUTTON_DELAY ) {       // make sure a reasonable delay passed
    if( int buttNum = buttonPushed(controlButtonsPin) ) {
      
-     #ifdef DEBUG
+     #ifdef DEBUG // button debug
      Serial.print("Button "); Serial.print(buttNum); Serial.println(" was pushed."); 
      #endif
 
-     // ------ iron  -----------------------------
-     if (buttNum == 8) // Iron temp Down
+     // --------------------- iron control  -----------------------------
+     if (buttNum == 8)   // Iron temp Down
        {
-     if ( ironTempSet <= ironTempMin || (ironTempSet-5) <= ironTempMin )
-      {
-        ironTempSet = ironTempMin;
+     if ( ironTempSet <= ironTempMin || (ironTempSet-5) <= ironTempMin )  
+      {                                                                 
+        ironTempSet = ironTempMin;     // if iron temp set is equal or less min temp - set temp to min                                    
       }
 
      else {
-          ironTempSet=ironTempSet-5;
+          ironTempSet=ironTempSet-5;  // if it`s not decreace temp by 5 degree
           }
       }
  
     else if (buttNum == 7) // Iron temp Up
       {
-      if ( ironTempSet >= ironTempMax )
+      if ( ironTempSet >= ironTempMax ) // if iron temp set is equal or more then max temp - set temp to max
         {
           ironTempSet = ironTempMax;
         }
       else {
-          ironTempSet=ironTempSet+5;
+          ironTempSet=ironTempSet+5;   // if it`s not increace temp by 5 degree
            }
       }
-     //------------------------------------------
+     // -------------------------------------------------------------------
 
-     // --- air ----------------------------------
+     // ----------------------- air control ----------------------------------
      if (buttNum == 5) // Air temp Down
        {
      if ( airTempSet <= airTempMin || (airTempSet-5) <= airTempMin )
       {
-        airTempSet = airTempMin;
+        airTempSet = airTempMin;    // if air temp set is equal or less min temp - set temp to min
       }
 
      else {
-          airTempSet=airTempSet-5;
+          airTempSet=airTempSet-5;  // if it`s not decreace temp by 5 degree
           }
       }
  
     else if (buttNum == 6) // Air temp Up
       {
-      if ( airTempSet >= airTempMax )
+      if ( airTempSet >= airTempMax ) // if air temp set is equal or more then max temp - set temp to max
         {
           airTempSet = airTempMax;
         }
       else {
-          airTempSet=airTempSet+5;
+          airTempSet=airTempSet+5;   // if it`s not increace temp by 5 degree
            }
       }
-    //--------------------------------------------
+    //-----------------------------------------------------------------------
 
-    //-------------- Fan ------------------
+    //---------------------- Fan speed control ------------------------------
      if (buttNum == 1) // Fan Speed Down
        {
      if ( fanSpeedSet <= fanSpeedMin || (fanSpeedSet-5) <= fanSpeedMin )
       {
-        fanSpeedSet = fanSpeedMin;
+        fanSpeedSet = fanSpeedMin;    // if fan speed set is equal or less min speed - set speed to min
       }
 
      else {
-          fanSpeedSet=fanSpeedSet-5;
+          fanSpeedSet=fanSpeedSet-5;  // if it`s not decreace speed by 5 percent
           }
       }
  
     else if (buttNum == 2) // Fan Speed Up
       {
-      if ( fanSpeedSet >= fanSpeedMax )
+      if ( fanSpeedSet >= fanSpeedMax ) // if fan speed set is equal or more then max speed - set speed to max
         {
           fanSpeedSet = fanSpeedMax;
         }
       else {
-          fanSpeedSet=fanSpeedSet+5;
+          fanSpeedSet=fanSpeedSet+5;  // if it`s not increace speed by 5 percent
            }
       }
-     //------------------------------------
+     //--------------------------------------------------------------------
    
    }
    buttonLastChecked = millis(); // reset the lastChecked value
  }
-//---------------------------------------------//
+//-------------------------------------------------------------------------------//
 
 // end loop
 }
 
 
-//----------------------- Buttons analog values check ------------------
+
+
+//------------------------------------ Buttons analog values check -------------------------------------
 int buttonPushed(int pinNum) {
  int val = 0;         // variable to store the read value
    val = analogRead(pinNum);   // read the input pin
