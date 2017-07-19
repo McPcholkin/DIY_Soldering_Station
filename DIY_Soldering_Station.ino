@@ -17,27 +17,27 @@
 #define SOUND 1
  
 // ----------------  Pinout ----------------------
-// iron control
-const int pinPwmIron = 6; // pwm to mosfet
+// Iron control
+const int pinPwmIron = 6;   // pwm to mosfet
 const int pinTempIron = A0; // input from termal sensor in iron
 
-// air control
+// Air control
 // zero cross detector pin = 2
-//const int pinControlAir = 3; // to tirac
+// const int pinControlAir = 3; // to tirac
 const int pinControlAirFan = 5; // pwm to fan
-const int pinTempAir = A1; // input from termal sensor in iron
+const int pinTempAir = A1;      // input from termal sensor in фшк пгт
 
 // Power toggles
-const int ironPowerToggle = 11;
-const int airPowerToggle = 10;
+const int ironPowerToggle = 11; // Iron ON\OFF switch
+const int airPowerToggle = 10;  // Ati  ON\OFF switch
 
 //  Buzzer pin
 const int buzzerPin = 9;
 
-// Buttons
+// Buttons (analog input)
 const int BUTTON_ERROR_WINDOW = 5;  // +/- this value 
 const int BUTTON_DELAY = 210;       // delay to debounce button
-const int controlButtonsPin = A4;   // switch circuit input connected to analog pin 4
+const int controlButtonsPin = A4;   // buttons circuit input connected to analog pin 4
 long buttonLastChecked = 0; // variable to limit the button getting checked every cycle
 
 // -------- LiquidCrystal 16x2 LCD display. --------
@@ -63,31 +63,31 @@ LiquidCrystal lcd(4, 7, 8, 12, 13, 19);
 const int lcdRefreshTime = 250; //refresh LCD every milisec 
 
 // -----------------------------------------------
-// -----------------------------------------------
 
 //--------------- iron temp control ------------------------------------
-int ironTempSet = 230;          //default set temp
-const int ironTempMin = 200;    //minimum temp
-const int  ironTempMax = 310;   //max temp
-int ironTempReal = 0;           //val termal sensor analog
-int ironTempRealC = 0;          //val termal sensor in celsius
-const int ironTempPwmMin = 50;  //minimal value PWM
+int ironTempSet = 230;           //default set temp
+const int ironTempMin = 200;     //minimum temp
+const int  ironTempMax = 310;    //max temp
+int ironTempReal = 0;            //val termal sensor analog
+int ironTempRealC = 0;           //val termal sensor in celsius
+const int ironTempPwmMin = 50;   //minimal value PWM
 const int ironTempPwmHalf = 125; //half value PWM
-const int ironTempPwmMax = 220; //maximum value PWM
-int ironTempPwmReal = 0;        //current PWM value
+const int ironTempPwmMax = 220;  //maximum value PWM
+int ironTempPwmReal = 0;         //current PWM value
 
 // Iron Calibration (may need some tweking)
-const int minIronTempValue = 20;  // min temperature in celsius
-const int maxIronTempValue = 330; // max heater temperature
-const int minIronAnalogValue = 5; // sensor value in room temperature
+const int minIronTempValue = 20;    // min temperature in celsius
+const int maxIronTempValue = 330;   // max heater temperature
+const int minIronAnalogValue = 5;   // sensor value in room temperature
 const int maxIronAnalogValue = 640; // sensor value on max heater temperature
 
-// phisical power switch
+// phisical power switch state
 boolean ironPowerState = 0; // iron ON state var
 // disconnected detection
 boolean ironDisconnected = 0;
 //-------------------------------------------------------------------------
 
+// Lib tu use AC tirac controll
 #include <CyberLib.h>  //attach lib by Cyber-Place.ru for dimming
 volatile uint8_t tic, Dimmer1 = 230; // 220 = min/off. 0 = max 
 uint8_t data;
@@ -97,12 +97,12 @@ uint8_t dir = 1;
 int airTempSet = 300;          //default set temp
 const int airTempMin = 200;    //minimum temp
 const int airTempMax = 580;    //max temp
-int airTempReal = 0;         //val termal sensor var
-int airTempRealC = 0;         // termal sensor var in celsius
-const int airDimmerMin = 155; //minimal value PWM
-const int airDimmerHalf = 64; //half value PWM
-const int airDimmerMax = 0;   //maximum value PWM
-const int airDimmerOff = 230;   //maximum value PWM
+int airTempReal = 0;           //val termal sensor var
+int airTempRealC = 0;          // termal sensor var in celsius
+const int airDimmerMin = 155;  //minimal value PWM
+const int airDimmerHalf = 64;  //half value PWM
+const int airDimmerMax = 0;    //maximum value PWM
+const int airDimmerOff = 230;  //maximum value PWM
 
 // Air Calibration
 const int minAirTempValue = 40;    // room temperature
@@ -110,19 +110,19 @@ const int maxAirTempValue = 580;   // max heater temperature
 const int minAirAnalogValue = 5;   // sensor value in room temperature
 const int maxAirAnalogValue = 702; // sensor value on max heater temperature
 
-// phisical power switch
+// phisical power switch state
 boolean airPowerState = 0; // Air ON state var
 // disconnected detection
 boolean airDisconnected = 0;
-// -------------------------------------------------------------------------
+//-------------------------------------------------------------------------
 
-// -------------  Air Fan control  ----------------------
-int fanSpeedSet = 50;       //default set fan speed in %
-const int fanSpeedMin = 30; // min fan speed in %
-const int fanSpeedMax = 100; // max fan speed in %
+//-------------  Air Fan control  ----------------------
+int fanSpeedSet = 50;           //default set fan speed in %
+const int fanSpeedMin = 30;     // min fan speed in %
+const int fanSpeedMax = 100;    // max fan speed in %
 const int fanSpeedPwmMin = 40;  // min PWM value
 const int fanSpeedPwmMax = 240; // max PWM value
-int fanSpeedPwmReal = 0; // current PWM value
+int fanSpeedPwmReal = 0;        // current PWM value
 
 // colling state
 boolean airCooldownState = 0; // air gun cooling down 
@@ -213,7 +213,7 @@ byte linesFull[8] = {
 
 
 //---------- analog smoothing Iron -----------------
-const int numReadingsIron = 30;
+const int numReadingsIron = 30;     // if system become unstable decreace value
 
 int readingsIron[numReadingsIron];  // the readings from the analog input
 int readIndexIron = 0;              // the index of the current reading
@@ -223,9 +223,9 @@ int averageIronTempPretty = 0;      //  just pretty value to display
 //------------------------------------------
 
 //---------- analog smoothing Air -----------------
-const int numReadingsAir = 30;
+const int numReadingsAir = 30;     // if system become unstable decreace value
 
-int readingsAir[numReadingsAir];  // the readings from the analog input
+int readingsAir[numReadingsAir];   // the readings from the analog input
 int readIndexAir = 0;              // the index of the current reading
 int totalAir = 0;                  // the running total
 int averageAirTemp = 0;            // the average
@@ -235,7 +235,7 @@ int averageAirTempPretty = 0;      //  just pretty value to display
 //--- beep without delay ---
 int beepState = 0; // last beep state
 unsigned long previousMillisBeep = 0;  // will store last time Beep was updated
-const long intervalBeep = 1000;           // interval at which to Beep (milliseconds)
+const long intervalBeep = 1000;        // interval at which to Beep (milliseconds)
 //--------------------------
 
 //--- cooldown without delay ---
@@ -244,6 +244,7 @@ const long cooldownTime = 60000;           // Cooldown time  (milliseconds) (60 
 //--------------------------
 
 
+// Setup some stuff
 void setup() {
   //debug
   #ifdef SERIALDEBUG
