@@ -240,7 +240,7 @@ const long intervalBeep = 1000;        // interval at which to Beep (millisecond
 
 //--- cooldown without delay ---
 unsigned long previousMillisCooldown = 0;  // will store last time Cooldown was updated
-const long cooldownTime = 60000;           // Cooldown time  (milliseconds) (60 SEC)
+const long cooldownTime = 120000;           // Cooldown time  (milliseconds) (120 SEC)
 //--------------------------
 
 
