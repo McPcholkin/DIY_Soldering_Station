@@ -95,7 +95,7 @@ uint8_t dir = 1;
 
 // Air temp control
 int airTempSet = 300;          //default set temp
-const int airTempMin = 200;    //minimum temp
+const int airTempMin = 100;    //minimum temp
 const int airTempMax = 580;    //max temp
 int airTempReal = 0;           //val termal sensor var
 int airTempRealC = 0;          // termal sensor var in celsius
@@ -299,7 +299,7 @@ void setup() {
   lcd.setCursor(0, 0);
   lcd.print("Soldering");
   lcd.setCursor(0, 1);
-  lcd.print("Station FW:0.6");
+  lcd.print("Station FW:0.7");
   lcd.setCursor(15, 0);
   lcd.write(byte(3));
   lcd.setCursor(15, 1);
