@@ -6,12 +6,14 @@
  * Doug LaRu, alex.marinenko, David A. Mellis, Paul Stoffregen, Scott Fitzgerald, Arturo Guadalupi
  */
 // enable debug serial output  //
-#define DEBUGIRON
+//#define DEBUGIRON
 //#define DEBUGAIR
 //#define DEBUGBUTTONS
 //#define DEBUG_ON
-#define SERIALDEBUG
+//#define SERIALDEBUG
 
+// FW Version
+const float fwVersion = 0.8;
 
 // enable sound
 #define SOUND 1
@@ -67,7 +69,7 @@ const int lcdRefreshTime = 250; //refresh LCD every milisec
 //--------------- iron temp control ------------------------------------
 int ironTempSet = 230;           //default set temp
 const int ironTempMin = 200;     //minimum temp
-const int ironTempMax = 250; //310;    //max temp
+const int ironTempMax = 310;    //max temp
 int ironTempReal = 0;            //val termal sensor analog
 int ironTempRealC = 0;           //val termal sensor in celsius
 const int ironTempPwmMin = 50;   //minimal value PWM
@@ -299,7 +301,11 @@ void setup() {
   lcd.setCursor(0, 0);
   lcd.print("Soldering");
   lcd.setCursor(0, 1);
-  lcd.print("Station FW:0.7");
+  lcd.print("Station FW:");
+  lcd.setCursor(11, 1);
+  lcd.print(fwVersion);
+  lcd.setCursor(14, 1);
+  lcd.print(" ");
   lcd.setCursor(15, 0);
   lcd.write(byte(3));
   lcd.setCursor(15, 1);
@@ -463,7 +469,7 @@ disconnectAlert();
 // ------------------------------  Iron temp control logic ----------------------------------------------------
 
 ironPowerState = digitalRead(ironPowerToggle);
-if ( ironPowerState == 1 ) && ( ironDisconnected == 0 ){// check if iron "ON" switch is enabled and iron connected
+if ( ironPowerState == 1 && ironDisconnected == 0 ){// check if iron "ON" switch is enabled and iron connected
   
   if (ironTempRealC < ironTempSet ){  // if iron temp lower then set temp do:
     if ((ironTempSet - ironTempRealC) < 16 & (ironTempSet - ironTempRealC) > 6 ) // check difference between -
