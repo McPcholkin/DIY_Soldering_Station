@@ -6,11 +6,11 @@
  * Doug LaRu, alex.marinenko, David A. Mellis, Paul Stoffregen, Scott Fitzgerald, Arturo Guadalupi
  */
 // enable debug serial output  //
-//#define DEBUGIRON
+#define DEBUGIRON
 //#define DEBUGAIR
 //#define DEBUGBUTTONS
 //#define DEBUG_ON
-//#define SERIALDEBUG
+#define SERIALDEBUG
 
 
 // enable sound
@@ -67,7 +67,7 @@ const int lcdRefreshTime = 250; //refresh LCD every milisec
 //--------------- iron temp control ------------------------------------
 int ironTempSet = 230;           //default set temp
 const int ironTempMin = 200;     //minimum temp
-const int  ironTempMax = 310;    //max temp
+const int ironTempMax = 250; //310;    //max temp
 int ironTempReal = 0;            //val termal sensor analog
 int ironTempRealC = 0;           //val termal sensor in celsius
 const int ironTempPwmMin = 50;   //minimal value PWM
@@ -463,7 +463,7 @@ disconnectAlert();
 // ------------------------------  Iron temp control logic ----------------------------------------------------
 
 ironPowerState = digitalRead(ironPowerToggle);
-if ( ironPowerState == 1){            // check if iron "ON" switch is enabled
+if ( ironPowerState == 1 ) && ( ironDisconnected == 0 ){// check if iron "ON" switch is enabled and iron connected
   
   if (ironTempRealC < ironTempSet ){  // if iron temp lower then set temp do:
     if ((ironTempSet - ironTempRealC) < 16 & (ironTempSet - ironTempRealC) > 6 ) // check difference between -
@@ -494,8 +494,8 @@ if ( ironPowerState == 1){            // check if iron "ON" switch is enabled
 }
 else 
 {
-  analogWrite(pinPwmIron, 0); // Disable iron heater if iron switch is OFF
-}
+  analogWrite(pinPwmIron, 0); // Disable iron heater if iron switch is OFF or iron disconnected
+}                             // Or iron temp sensor fail
 
 //----------------------------------------------------------------------------------------------------
 
