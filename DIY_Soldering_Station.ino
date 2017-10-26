@@ -13,7 +13,7 @@
 //#define SERIALDEBUG
 
 // FW Version
-const float fwVersion = 0.8;
+const float fwVersion = 0.9;
 
 // enable sound
 #define SOUND 1
@@ -111,6 +111,9 @@ const int minAirTempValue = 40;    // room temperature
 const int maxAirTempValue = 580;   // max heater temperature
 const int minAirAnalogValue = 5;   // sensor value in room temperature
 const int maxAirAnalogValue = 702; // sensor value on max heater temperature
+
+// Air disconnected trashhold
+const int airDisconnectedTrashold = 720; // analog value from sensor when air disconnected.
 
 // phisical power switch state
 boolean airPowerState = 0; // Air ON state var
@@ -541,7 +544,7 @@ else
 {
   Dimmer1 = airDimmerOff;      // write OFF value 
 
-  if ( airCooldownState == 0 && averageAirTemp > minAirTempValue+8 &&  airTempReal < 760 )  // if cooling not start and air temp -
+  if ( airCooldownState == 0 && averageAirTemp > minAirTempValue+8 &&  airTempReal < airDisconnectedTrashold )  // if cooling not start and air temp -
   {                                                                                         // more then room temp: start cooldown
     airCooldownState = 1;                                                                   // (760 is sensor value on disconnected air gun)
   }
@@ -985,32 +988,32 @@ void disconnectAlert()            // detect disconnected alert
   int alertIron = 0;              // init var to store iron alert status
   int alertAir = 0;               // init var to store air alert status
   
-  if ( airTempReal >= 760 && airPowerState == 1 ) // check if air analog value is 760 (meshured on disconnected)
+  if ( airTempReal >= airDisconnectedTrashold && airPowerState == 1 ) // check if air analog value is 760 (meshured on disconnected)
   {                                               // and iron power switch is ON
      airDisconnected = 1; // chandge status
      alertAir = 1;        // signal is needed
   }
-  else if ( airTempReal >= 760 && airPowerState == 0 ) // if air disconnected on off and analog value is 760 (meshured on disconnected)
+  else if ( airTempReal >= airDisconnectedTrashold && airPowerState == 0 ) // if air disconnected on off and analog value is 760 (meshured on disconnected)
   {
     airDisconnected = 1; // chandge status
     alertAir = 0;        // signal is NOT needed
   }
-  else if ( airTempReal < 760 ) // if air connected
+  else if ( airTempReal < airDisconnectedTrashold ) // if air connected
   {
     airDisconnected = 0; // chandge status
     alertAir = 0;        // signal is NOT needed
   }
-  if ( ironTempReal >= 760 && ironPowerState == 1 ) //if iron disconnected on work
+  if ( ironTempReal >= airDisconnectedTrashold && ironPowerState == 1 ) //if iron disconnected on work
   {
      ironDisconnected = 1;  // chandge status
      alertIron = 1;         // signal is needed
   }
-  else if ( ironTempReal >= 760 && ironPowerState == 0 ) //if iron disconnected on off
+  else if ( ironTempReal >= airDisconnectedTrashold && ironPowerState == 0 ) //if iron disconnected on off
   {
     ironDisconnected = 1;  // chandge status
     alertIron = 0;         // signal is NOT needed
   }
-  else if ( ironTempReal < 760 ) // if iron connected
+  else if ( ironTempReal < airDisconnectedTrashold ) // if iron connected
   {
     ironDisconnected = 0;  // chandge status
     alertIron = 0;         // signal is NOT needed
